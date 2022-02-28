@@ -3,6 +3,8 @@
 namespace RobinHood70\Extension\ParserHelper;
 */
 
+define('MT_LOG_FILE', 'MetaLog.txt');
+
 function alert($msg)
 {
 	echo "<script>alert(\"$msg\")</script>";
@@ -20,13 +22,41 @@ function show(...$msgs)
 	echo '</pre>';
 }
 
-function showQuery(IDatabase $db, ResultWrapper $result)
+function formatQuery(IDatabase $db, ResultWrapper $result = null)
 {
 	// MW 1.28+: $db = $result->getDB();
-	show($db->lastQuery() . "\n\n" . $db->numRows($result) . ' rows returned.');
+	$retval = $result ? $db->numRows($result) . ' rows returned.' : '';
+	return $db->lastQuery() . "\n\n" . $retval;
 }
 
-function writeFile($file, ...$msgs)
+function logFunctionText($text = '')
+{
+	$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[1];
+	$method = $caller['function'];
+	if (isset($caller['class'])) {
+		$method = $caller['class'] . '::' . $method;
+	}
+
+	writeFile($method, $text);
+}
+
+function logFunctionExit($method = __METHOD__)
+{
+	$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[1];
+	$method = $caller['function'];
+	if (isset($caller['class'])) {
+		$method = $caller['class'] . '::' . $method;
+	}
+
+	writeFile("$method~");
+}
+
+function writeFile(...$msgs)
+{
+	writeAnyFile(MT_LOG_FILE, ...$msgs);
+}
+
+function writeAnyFile($file, ...$msgs)
 {
 	$handle = fopen($file, 'a') or die("Cannot open file: $file");
 	foreach ($msgs as $msg) {
@@ -35,6 +65,7 @@ function writeFile($file, ...$msgs)
 	}
 
 	fwrite($handle, "\n");
+	fflush($handle);
 	fclose($handle);
 }
 
@@ -75,6 +106,9 @@ class ParserHelper
 	 */
 	public static function arrayGet(array $array, $key, $default = null)
 	{
+		if (is_array($key)) {
+			show(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
+		}
 		if (isset($array[$key]) || array_key_exists($key, $array)) {
 			return $array[$key];
 		}
