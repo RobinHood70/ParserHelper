@@ -37,18 +37,7 @@ function logFunctionText($text = '')
 		$method = $caller['class'] . '::' . $method;
 	}
 
-	writeFile($method, $text);
-}
-
-function logFunctionExit($method = __METHOD__)
-{
-	$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[1];
-	$method = $caller['function'];
-	if (isset($caller['class'])) {
-		$method = $caller['class'] . '::' . $method;
-	}
-
-	writeFile("$method~");
+	writeFile($method, ': ', $text);
 }
 
 function writeFile(...$msgs)
@@ -213,10 +202,6 @@ class ParserHelper
 							$found = true;
 							$magic[$magKey] = $frame->expand($value);
 							unset($allowedArgs[$trKey]);
-							if (count($allowedArgs) == 0) {
-								break 2;
-							}
-
 							break;
 						}
 					}
