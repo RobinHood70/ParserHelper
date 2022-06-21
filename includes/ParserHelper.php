@@ -112,7 +112,7 @@ class ParserHelper
 	 * @return boolean
 	 *
 	 */
-	public static function checkDebug(Parser $parser, array $magicArgs = null)
+	public static function checkDebug(Parser $parser, array $magicArgs)
 	{
 		$debug = self::arrayGet($magicArgs, self::NA_DEBUG);
 		// show('Debug parameter: ', $debug);
