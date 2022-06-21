@@ -170,26 +170,24 @@ class ParserHelper
 		$values = [];
 		$allowedArray = new MagicWordArray($allowedArgs);
 		if (count($args) && count($allowedArgs)) {
-			for ($i = count($args) - 1; $i >= 0; $i--) {
-				$arg = $args[$i];
+			foreach ($args as $arg) {
 				list($name, $value) = self::getKeyValue($frame, $arg);
 				if (is_null($name)) {
+					// show('Add anon: ', $frame->expand($value));
 					$values[] = $value;
 				} else {
 					$magKey = $allowedArray->matchStartToEnd($name);
 					if ($magKey) {
+						// show('Add magic: ', $magKey, '=', $frame->expand($value));
 						$magic[$magKey] = $frame->expand($value);
-						break;
-					}
-
-					if (!$magKey) {
+					} else {
+						// show('Add fake k=v: ', $frame->expand($arg));
 						$values[] = $arg;
 					}
 				}
 			}
 		}
 
-		$values = array_reverse($values);
 		return [$magic, $values];
 	}
 
@@ -206,9 +204,14 @@ class ParserHelper
 	public static function getMagicValue($word, array $args, $default = false)
 	{
 		foreach ($args as $key => $value) {
-			if (self::$mwArray->matchStartToEnd($key) === $word) {
+			$match = self::$mwArray->matchStartToEnd($key);
+			// show('Match: ', $match);
+			if ($match === $word) {
+				show($key, ' == ', $word);
 				return $value;
 			}
+
+			// show($key, '=', $value, ' != ', $word);
 		}
 
 		return $default;
@@ -302,4 +305,90 @@ class ParserHelper
 			$parser->setHook($synonym, $callback);
 		}
 	}
+}
+
+/**
+ * Where to log to for the global functions that need it.
+ */
+define('PH_LOG_FILE', 'ParserHelperLog.txt');
+
+/**
+ * Tries to send a popup message via Javascript.
+ *
+ * @param mixed $msg The message to send.
+ *
+ * @return void
+ */
+function alert($msg)
+{
+	echo "<script>alert(\" $msg\")</script>";
+}
+
+/**
+ * Returns the last query run along with the number of rows affected, if any.
+ *
+ * @param IDatabase $db
+ * @param ResultWrapper|null $result
+ *
+ * @return string The text of the query and the result count.
+ *
+ */
+function formatQuery(IDatabase $db, ResultWrapper $result = null)
+{
+	// MW 1.28+: $db = $result->getDB();
+	$retval = $result ? $db->numRows($result) . ' rows returned.' : '';
+	return $db->lastQuery() . "\n\n" . $retval;
+}
+
+/**
+ * Logs text to the file provided in the PH_LOG_FILE define.
+ *
+ * @param string $text The text to add to the log.
+ *
+ * @return void
+ *
+ */
+function logFunctionText($text = '')
+{
+	$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[1];
+	$method = $caller['function'];
+	if (isset($caller['class'])) {
+		$method = $caller['class'] . '::' . $method;
+	}
+
+	writeFile($method, ': ', $text);
+}
+
+/**
+ * Displays the provided message(s) on-screen, if possible.
+ *
+ * @param mixed ...$msgs
+ *
+ * @return void
+ *
+ */
+function show(...$msgs)
+{
+	echo '
+    <pre>';
+	foreach ($msgs as $msg) {
+		if ($msg) {
+			print_r(htmlspecialchars(print_r($msg, true)));
+		}
+	}
+
+	echo '</pre>';
+}
+
+/**
+ * Writes the provided text to the log file specified in PH_LOG_FILE.
+ *
+ * @param mixed ...$msgs What to log.
+ *
+ * @return void
+ *
+ */
+function writeFile(...$msgs)
+{
+	writeAnyFile(PH_LOG_FILE, ...$msgs);
 }
