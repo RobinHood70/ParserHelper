@@ -34,9 +34,11 @@ class ParserHelper
 	 */
 	public static function arrayGet(array $array, $key, $default = null)
 	{
+		/*
 		if (is_array($key)) {
 			show(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
 		}
+		*/
 
 		if (isset($array[$key]) || array_key_exists($key, $array)) {
 			return $array[$key];
@@ -226,7 +228,7 @@ class ParserHelper
 			$match = self::$mwArray->matchStartToEnd($key);
 			// show('Match: ', $match);
 			if ($match === $word) {
-				show($key, ' == ', $word);
+				// show($key, ' == ', $word);
 				return $value;
 			}
 
