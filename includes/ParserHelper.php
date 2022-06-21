@@ -1,103 +1,43 @@
 <?php
-/*
-namespace RobinHood70\Extension\ParserHelper;
-*/
-
-define('MT_LOG_FILE', 'MetaLog.txt');
-
-function alert($msg)
-{
-	echo "<script>alert(\"$msg\")</script>";
-}
-
-function show(...$msgs)
-{
-	echo '<pre>';
-	foreach ($msgs as $msg) {
-		if ($msg) {
-			print_r($msg);
-		}
-	}
-
-	echo '</pre>';
-}
-
-function formatQuery(IDatabase $db, ResultWrapper $result = null)
-{
-	// MW 1.28+: $db = $result->getDB();
-	$retval = $result ? $db->numRows($result) . ' rows returned.' : '';
-	return $db->lastQuery() . "\n\n" . $retval;
-}
-
-function logFunctionText($text = '')
-{
-	$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[1];
-	$method = $caller['function'];
-	if (isset($caller['class'])) {
-		$method = $caller['class'] . '::' . $method;
-	}
-
-	writeFile($method, ': ', $text);
-}
-
-function writeFile(...$msgs)
-{
-	writeAnyFile(MT_LOG_FILE, ...$msgs);
-}
-
-function writeAnyFile($file, ...$msgs)
-{
-	$handle = fopen($file, 'a') or die("Cannot open file: $file");
-	foreach ($msgs as $msg) {
-		$msg2 = print_r($msg, true);
-		fwrite($handle, $msg2);
-	}
-
-	fwrite($handle, "\n");
-	fflush($handle);
-	fclose($handle);
-}
 
 /**
- * [Description ParserHelper]
+ * Provides a number of library routines, mostly related to the parser along with a few generic global methods.
  */
 class ParserHelper
 {
 	const AV_ANY = 'parserhelper-any';
 	const AV_ALWAYS = 'parserhelper-always';
 	const NA_CASE = 'parserhelper-case';
+	const NA_DEBUG = 'parserhelper-debug';
 	const NA_IF = 'parserhelper-if';
 	const NA_IFNOT = 'parserhelper-ifnot';
 	const NA_NSBASE = 'namespaceinfo-ns_base';
 	const NA_NSID = 'namespaceinfo-ns_id';
 
-	private static $allMagicWords = [
-		self::AV_ANY,
-		self::AV_ALWAYS,
-		self::NA_CASE,
-		self::NA_IF,
-		self::NA_IFNOT,
-		self::NA_NSBASE,
-		self::NA_NSID,
-	];
-
 	/**
-	 * @var string[][]
-	 */
-	private static $lmw = [];
-
-	/**
-	 * @param array $array
-	 * @param mixed $key
-	 * @param null $default
+	 * Cache for localized magic words.
 	 *
-	 * @return mixed
+	 * @var MagicWordArray
+	 */
+	private static $mwArray;
+
+	/**
+	 * Gets a value from an array with proper existence checks beforehand.
+	 * This can be replaced with `$array[$key] ?? $default` if upgraded to PHP 7.
+	 *
+	 * @param array $array The array to search.
+	 * @param mixed $key The key of the value to retrieve.
+	 * @param null $default A value to use if the key is not found in the array.
+	 * If not provided, `null` will be returned.
+	 *
+	 * @return mixed The requested value, or `$default|null` if not found.
 	 */
 	public static function arrayGet(array $array, $key, $default = null)
 	{
 		if (is_array($key)) {
 			show(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
 		}
+
 		if (isset($array[$key]) || array_key_exists($key, $array)) {
 			return $array[$key];
 		}
@@ -106,37 +46,69 @@ class ParserHelper
 	}
 
 	/**
-	 * @param string[] $magicWords
+	 * Gets the first value in an associative array where the key the list of keys provided.
+	 *
+	 * @param array $array The array to search.
+	 * @param mixed $key The keys of the value to retrieve.
+	 * @param null $default A value to use if none of the keys was found in the array.
+	 * If not provided, `null` will be returned.
+	 *
+	 * @return mixed The requested value, or `$default|null` if not found.
+	 */
+	public static function arrayGetFirst(array $array, array $keys, $default = null)
+	{
+		foreach ($keys as $key) {
+			if (isset($array[$key])) {
+				return $array[$key];
+			}
+		}
+
+		return $default;
+	}
+
+	/**
+	 * Caches magic words in a static MagicWordArray. This should include any named arguments or argument values that
+	 * need to be localized, along with any other magic words not already registered with the parser by other means,
+	 * such as parser functions, tags, and so forth.
+	 *
+	 * @param array $magicWords The magic words to cache.
 	 *
 	 * @return void
 	 */
 	public static function cacheMagicWords(array $magicWords)
 	{
-		foreach ($magicWords as $magicWord) {
-			self::$lmw[$magicWord] = MagicWord::get($magicWord)->getSynonyms();
+		if (!isset(self::$mwArray)) {
+			self::$mwArray = new MagicWordArray($magicWords);
+		} else {
+			self::$mwArray->addArray($magicWords);
 		}
+
+		/*
+		foreach ($magicWords as $mw) {
+			self::$magicWords[] = MagicWord::get($mw);
+		}
+		*/
 	}
 
 	/**
-	 * checkAnyCase
+	 * Checks the `case` parameter to see if matches `case=any` or any of the localized equivalents.
 	 *
-	 * @param array $magicArgs
+	 * @param array $magicArgs The list of arguments to search.
 	 *
-	 * @return bool
+	 * @return boolean True if `case=any` or any localized equivalent was found in the argument list.
 	 */
 	public static function checkAnyCase(array $magicArgs)
 	{
 		$caseValue = self::arrayGet($magicArgs, self::NA_CASE);
-		return in_array($caseValue, self::getMagicWordNames(self::AV_ANY));
+		return self::$mwArray->matchStartToEnd($caseValue) === self::AV_ANY;
 	}
 
-	// IMP: if and ifnot can co-exist; both must be satisfied to proceed.
 	/**
-	 * checkIfs
+	 * Checks whether both the `if=` and `ifnot=` conditions have been satisfied.
 	 *
-	 * @param array $magicArgs
+	 * @param array $magicArgs The magic word array containing the arguments.
 	 *
-	 * @return bool
+	 * @return boolean True if both conditions (if applicable) have been satisfied; otherwise, false.
 	 */
 	public static function checkIfs(array $magicArgs)
 	{
@@ -145,49 +117,58 @@ class ParserHelper
 			!self::arrayGet($magicArgs, self::NA_IFNOT, false);
 	}
 
-	public static function expandAll(PPFrame $frame, ...$values)
-	{
-		$retval = [];
-		foreach ($values as $value) {
-			$retval[] = $frame->expand($value);
-		}
-
-		return $retval;
-	}
-
-	public static function expandArray(PPFrame $frame, array $values, $count = 0, $flags = 0)
-	{
-		$retval = [];
-		if ($count == 0) {
-			$count = count($values);
-		}
-
-		foreach ($values as $value) {
-			$retval[] = $frame->expand($value, $flags);
-			$count--;
-			if ($count <= 0) {
-				break;
-			}
-		}
-
-		return $retval;
-	}
-
-	// Returns an associative array of the allowable named arguments and their expanded values. All other values,
-	// including unrecognized named arguments, will be returned under the VALUES_KEY key.
 	/**
-	 * getMagicArgs
+	 * Expands an entire array of values using the MediaWiki pre-processor.
+	 * This is useful when parsing arguments to parser functions.
 	 *
-	 * @param PPFrame $frame
-	 * @param array $args
-	 * @param mixed ...$allowedArgs
+	 * @param PPFrame $frame The expansion frame to use.
+	 * @param array $values The values to expand.
+	 * @param int $flags
 	 *
 	 * @return array
+	 */
+	public static function expandArray(PPFrame $frame, array $values, $flags = 0)
+	{
+		$retval = [];
+		foreach ($values as $value) {
+			$retval[] = $frame->expand($value, $flags);
+		}
+
+		return $retval;
+	}
+
+	/**
+	 * Finds the magic word ID that corresponds to the value provided.
+	 *
+	 * @param string $value The value to look up.
+	 *
+	 * @return string|false
+	 *
+	 */
+	public static function findMagicID($value)
+	{
+		return self::$mwArray->matchStartToEnd($value);
+	}
+
+	/**
+	 * Returns an associative array of the named arguments that are allowed for a magic word or parser function along
+	 * with their values. The function checks all localized variants for a named argument and returns their associated
+	 * values under a single unified key.
+	 *
+	 * @param PPFrame $frame The expansion frame to use.
+	 * @param array $args The arguments to search.
+	 * @param mixed ...$allowedArgs A list of arguments that should be expanded and returned in the `$magic` portion of
+	 * the returned array. All other arguments will be returned in the `$values` portion of the returned array.
+	 *
+	 * @return [array, array] The return value consists of two sets of array. The first array contains the list of any
+	 * named arguments from `$allowedArgs` that were found. The values will have been expanded before being returned.
+	 * The second array will contain all other arguments. These are left unexpanded to avoid processing conditional code.
 	 */
 	public static function getMagicArgs(PPFrame $frame, array $args = [], ...$allowedArgs)
 	{
 		$magic = [];
 		$values = [];
+		$allowedArray = new MagicWordArray($allowedArgs);
 		if (count($args) && count($allowedArgs)) {
 			for ($i = count($args) - 1; $i >= 0; $i--) {
 				$arg = $args[$i];
@@ -195,18 +176,13 @@ class ParserHelper
 				if (is_null($name)) {
 					$values[] = $value;
 				} else {
-					$found = false;
-					foreach ($allowedArgs as $trKey => $magKey) {
-						$allWords = self::$lmw[$magKey];
-						if (in_array($name, $allWords)) {
-							$found = true;
-							$magic[$magKey] = $frame->expand($value);
-							unset($allowedArgs[$trKey]);
-							break;
-						}
+					$magKey = $allowedArray->matchStartToEnd($name);
+					if ($magKey) {
+						$magic[$magKey] = $frame->expand($value);
+						break;
 					}
 
-					if (!$found) {
+					if (!$magKey) {
 						$values[] = $arg;
 					}
 				}
@@ -218,26 +194,30 @@ class ParserHelper
 	}
 
 	/**
-	 * getMagicWordNames
+	 * Gets the value in an array where the key is one of the magic word's synonyms.
 	 *
-	 * @param mixed $words
+	 * @param string $word The magic word to search for.
+	 * @param array $args The array to search.
+	 * @param bool $default The default value, if nothing matches.
 	 *
-	 * @return string[]
+	 * @return mixed
+	 *
 	 */
-	public static function getMagicWordNames($words)
+	public static function getMagicValue($word, array $args, $default = false)
 	{
-		if (is_array($words)) {
-			$retval = [];
-			foreach ($words as $word) {
-				if (array_key_exists($word, self::$lmw)) {
-					$retval =  array_merge($retval, self::$lmw[$word]);
-				}
+		foreach ($args as $key => $value) {
+			if (self::$mwArray->matchStartToEnd($key) === $word) {
+				return $value;
 			}
-
-			return $retval;
-		} else {
-			return self::$lmw[$words];
 		}
+
+		return $default;
+	}
+
+	public static function magicWordIn($word, $allowedWords)
+	{
+		$key = self::$mwArray->matchStartToEnd($word);
+		return is_bool($key) ? null : in_array($key, $allowedWords);
 	}
 
 	/**
@@ -269,19 +249,28 @@ class ParserHelper
 	}
 
 	/**
-	 * init
+	 * Initializes ParserHelper, caching all required magic words.
 	 *
 	 * @return void
 	 */
 	public static function init()
 	{
-		self::cacheMagicWords(self::$allMagicWords);
+		self::cacheMagicWords([
+			self::AV_ANY,
+			self::AV_ALWAYS,
+			self::NA_CASE,
+			self::NA_DEBUG,
+			self::NA_IF,
+			self::NA_IFNOT,
+			self::NA_NSBASE, // These are shared here for now. There may be a better way to integrate
+			self::NA_NSID,   // them later as Riven, MetaTemplate and UespCustomCode develop.
+		]);
 	}
 
 	/**
-	 * nullCoalesce
+	 * Primitive null coalescing for older versions of PHP.
 	 *
-	 * @param mixed ...$args
+	 * @param mixed ...$args The arguments to evaluate.
 	 *
 	 * @return mixed|null
 	 */
@@ -295,5 +284,22 @@ class ParserHelper
 		}
 
 		return null;
+	}
+
+	/**
+	 * Calls setHook() for all synonyms of a tag.
+	 *
+	 * @param Parser $parser The parser to register the tag names with.
+	 * @param mixed $id The magic word ID whose synonyms should be registered.
+	 * @param callable $callback The function to call when the tag is used.
+	 *
+	 * @return void
+	 *
+	 */
+	public static function setHookSynonyms(Parser $parser, $id, callable $callback)
+	{
+		foreach (MagicWord::get($id)->getSynonyms() as $synonym) {
+			$parser->setHook($synonym, $callback);
+		}
 	}
 }

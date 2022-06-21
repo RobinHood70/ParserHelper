@@ -7,6 +7,12 @@
 	"description": "Features to make it easier to design parser extensions",
 	"license-name": "GPL-2.0-or-later",
 	"type": "other",
+	"requires": {
+		"MediaWiki": ">= 1.27.0",
+		"platform": {
+			"php": ">= 5.4"
+		}
+	},
 	"MessagesDirs": {
 		"ParserHelper": [
 			"i18n"
@@ -16,11 +22,8 @@
 		"ParserHelperMagic": "i18n/ParserHelper.i18n.magic.php"
 	},
 	"AutoloadClasses": {
-		"ParserHelper": "includes/ParserHelper.php",
-		"ParserHelperHooks": "includes/RivenHooks.php"
-	},
-	"Hooks": {
-		"ParserFirstCallInit": "RivenHooks::onParserFirstCallInit"
+		"Debugging": "includes/Debugging.php",
+		"ParserHelper": "includes/ParserHelper.php"
 	},
 	"manifest_version": 1
 }

@@ -1,19 +1,13 @@
 <?php
-// namespace MediaWiki\Extension\MetaTemplate;
-use MediaWiki\MediaWikiServices;
-// use MediaWiki\DatabaseUpdater;
 
-// TODO: Add {{#define/local/preview:a=b|c=d}}
-/**
- * [Description MetaTemplateHooks]
- */
+use MediaWiki\MediaWikiServices;
+
 class ParserHelperHooks
 {
-	// Register any render callbacks with the parser
 	/**
-	 * onParserFirstCallInit
+	 * Register callbacks with the parser.
 	 *
-	 * @param Parser $parser
+	 * @param Parser $parser The parser to register with.
 	 *
 	 * @return void
 	 */
