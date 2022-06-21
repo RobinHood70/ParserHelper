@@ -104,6 +104,25 @@ class ParserHelper
 	}
 
 	/**
+	 * Checks the debug argument to see if it's boolean or 'always'.
+	 *
+	 * @param Parser $parser The parser in use.
+	 * @param array|null $magicArgs The magic word arguments as created by getMagicArgs().
+	 *
+	 * @return boolean
+	 *
+	 */
+	public static function checkDebug(Parser $parser, array $magicArgs = null)
+	{
+		$debug = self::arrayGet($magicArgs, self::NA_DEBUG);
+		// show('Debug parameter: ', $debug);
+		return $parser->getOptions()->getIsPreview()
+			? boolval($debug)
+			: MagicWord::get(self::AV_ALWAYS)->matchStartToEnd($debug);
+		// show('Debug final: ', $debug);
+	}
+
+	/**
 	 * Checks whether both the `if=` and `ifnot=` conditions have been satisfied.
 	 *
 	 * @param array $magicArgs The magic word array containing the arguments.
@@ -217,12 +236,6 @@ class ParserHelper
 		return $default;
 	}
 
-	public static function magicWordIn($word, $allowedWords)
-	{
-		$key = self::$mwArray->matchStartToEnd($word);
-		return is_bool($key) ? null : in_array($key, $allowedWords);
-	}
-
 	/**
 	 * Returns a string or part node split into a key/value pair, with the key expanded, if necessary, into a string.
 	 * The return value is always an array. If the argument is of the wrong type, or isn't a key/value pair, the key
@@ -268,6 +281,12 @@ class ParserHelper
 			self::NA_NSBASE, // These are shared here for now. There may be a better way to integrate
 			self::NA_NSID,   // them later as Riven, MetaTemplate and UespCustomCode develop.
 		]);
+	}
+
+	public static function magicWordIn($word, $allowedWords)
+	{
+		$key = self::$mwArray->matchStartToEnd($word);
+		return is_bool($key) ? null : in_array($key, $allowedWords);
 	}
 
 	/**
@@ -391,4 +410,26 @@ function show(...$msgs)
 function writeFile(...$msgs)
 {
 	writeAnyFile(PH_LOG_FILE, ...$msgs);
+}
+
+/**
+ * Logs the provided text to the specified file.
+ *
+ * @param mixed $file The file to output to.
+ * @param mixed ...$msgs What to log.
+ *
+ * @return void
+ *
+ */
+function writeAnyFile($file, ...$msgs)
+{
+	$handle = fopen($file, 'a') or die("Cannot open file: $file");
+	foreach ($msgs as $msg) {
+		$msg2 = print_r($msg, true);
+		fwrite($handle, $msg2);
+	}
+
+	fwrite($handle, "\n");
+	fflush($handle);
+	fclose($handle);
 }
