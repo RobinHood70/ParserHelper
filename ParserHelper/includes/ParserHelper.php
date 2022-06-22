@@ -84,12 +84,6 @@ class ParserHelper
 		} else {
 			self::$mwArray->addArray($magicWords);
 		}
-
-		/*
-		foreach ($magicWords as $mw) {
-			self::$magicWords[] = MagicWord::get($mw);
-		}
-		*/
 	}
 
 	/**
