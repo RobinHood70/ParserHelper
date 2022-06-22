@@ -125,6 +125,26 @@ class ParserHelper
 	}
 
 	/**
+	 * Checks the debug argument to see if it's boolean or 'always'. This variant of checkDebug expects the keys to be
+	 * magic word values rather than magic word IDs.
+	 *
+	 * @param Parser $parser The parser in use.
+	 * @param array|null $magicArgs The magic word arguments as created by getMagicArgs().
+	 *
+	 * @return boolean
+	 *
+	 */
+	public static function checkDebugMagic(Parser $parser, array $args)
+	{
+		$debug = self::getMagicValue(self::NA_DEBUG, $args);
+		// show('Debug parameter: ', $debug);
+		return $parser->getOptions()->getIsPreview()
+			? boolval($debug)
+			: MagicWord::get(self::AV_ALWAYS)->matchStartToEnd($debug);
+		// show('Debug final: ', $debug);
+	}
+
+	/**
 	 * Checks whether both the `if=` and `ifnot=` conditions have been satisfied.
 	 *
 	 * @param array $magicArgs The magic word array containing the arguments.
