@@ -130,7 +130,7 @@ class ParserHelper
 	 */
 	public static function checkDebugMagic(Parser $parser, array $args)
 	{
-		$debug = self::getMagicValue(self::NA_DEBUG, $args);
+		$debug = self::getArgumentValue(self::NA_DEBUG, $args);
 		// show('Debug parameter: ', $debug);
 		return $parser->getOptions()->getIsPreview()
 			? boolval($debug)
@@ -180,9 +180,49 @@ class ParserHelper
 	 * @return string|false
 	 *
 	 */
-	public static function findMagicID($value)
+	public static function findMagicID($value, $default = null)
 	{
-		return self::$mwArray->matchStartToEnd($value);
+		$match = self::$mwArray->matchStartToEnd($value);
+		return $match === false ? $default : $match;
+	}
+
+	/**
+	 * Standardizes debug text formatting for parser functions.
+	 *
+	 * @param string $output The original text being output.
+	 * @param Parser $parser The parser in use.
+	 * @param $magicArgs The list of magic word arguments, typically from getMagicArgs().
+	 *
+	 * @return string The modified text.
+	 *
+	 */
+	public static function formatPFForDebug($output, $parser, $magicArgs)
+	{
+		if (ParserHelper::checkDebug($parser, $magicArgs)) {
+			return ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false];
+		}
+
+		return [$output, 'noparse' => false];
+	}
+
+	/**
+	 * Standardizes debug text formatting for tags.
+	 *
+	 * @param string $output The original text being output.
+	 * @param boolean $debug Whether to format as debug text or as normal.
+	 *
+	 * @return string The modified text.
+	 *
+	 */
+	public static function formatTagForDebug($output, $debug)
+	{
+		// It ended up that for both the cases of this so far, we needed to process the debug value before getting
+		// here, so I made the debug check a simple boolean.
+		if ($debug) {
+			return ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki'];
+		}
+
+		return [$output, 'markerType' => 'none'];
 	}
 
 	/**
@@ -203,6 +243,7 @@ class ParserHelper
 	{
 		$magic = [];
 		$values = [];
+		$dupes = [];
 		$allowedArray = new MagicWordArray($allowedArgs);
 		if (count($args) && count($allowedArgs)) {
 			foreach ($args as $arg) {
@@ -213,8 +254,15 @@ class ParserHelper
 				} else {
 					$magKey = $allowedArray->matchStartToEnd($name);
 					if ($magKey) {
-						// show('Add magic: ', $magKey, '=', $frame->expand($value));
-						$magic[$magKey] = $frame->expand($value);
+						if (isset($magic[$magKey])) {
+							// If a key already exists and is one of the allowed keys, add it to the dupes list. This
+							// allows for the possibility of merging the duplicate back into values later on for cases
+							// like #splitargs where it may be desirable to have keys for the called template
+							// (e.g., separator) that overlap with those of the template.
+							$dupes[$name] = $value;
+						} else {
+							$magic[$magKey] = $frame->expand($value);
+						}
 					} else {
 						// show('Add fake k=v: ', $frame->expand($arg));
 						$values[] = $arg;
@@ -223,7 +271,7 @@ class ParserHelper
 			}
 		}
 
-		return [$magic, $values];
+		return [$magic, $values, $dupes];
 	}
 
 	/**
@@ -236,7 +284,7 @@ class ParserHelper
 	 * @return mixed
 	 *
 	 */
-	public static function getMagicValue($word, array $args, $default = false)
+	public static function getArgumentValue($word, array $args, $default = false)
 	{
 		foreach ($args as $key => $value) {
 			$match = self::$mwArray->matchStartToEnd($key);
@@ -356,6 +404,10 @@ define('PH_LOG_FILE', 'ParserHelperLog.txt');
  */
 function alert($msg)
 {
+	if (!isDev()) {
+		return;
+	}
+
 	echo "<script>alert(\" $msg\")</script>";
 }
 
@@ -370,9 +422,18 @@ function alert($msg)
  */
 function formatQuery(IDatabase $db, ResultWrapper $result = null)
 {
+	if (!isDev()) {
+		return;
+	}
+
 	// MW 1.28+: $db = $result->getDB();
 	$retval = $result ? $db->numRows($result) . ' rows returned.' : '';
 	return $db->lastQuery() . "\n\n" . $retval;
+}
+
+function isDev()
+{
+	return in_array($_SERVER['SERVER_NAME'], ['dev.uesp.net', 'rob-centob']);
 }
 
 /**
@@ -385,6 +446,10 @@ function formatQuery(IDatabase $db, ResultWrapper $result = null)
  */
 function logFunctionText($text = '')
 {
+	if (!isDev()) {
+		return;
+	}
+
 	$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[1];
 	$method = $caller['function'];
 	if (isset($caller['class'])) {
@@ -404,6 +469,10 @@ function logFunctionText($text = '')
  */
 function show(...$msgs)
 {
+	if (!isDev()) {
+		return;
+	}
+
 	echo '
     <pre>';
 	foreach ($msgs as $msg) {
@@ -439,6 +508,10 @@ function writeFile(...$msgs)
  */
 function writeAnyFile($file, ...$msgs)
 {
+	if (!isDev()) {
+		return;
+	}
+
 	$handle = fopen($file, 'a') or die("Cannot open file: $file");
 	foreach ($msgs as $msg) {
 		$msg2 = print_r($msg, true);
