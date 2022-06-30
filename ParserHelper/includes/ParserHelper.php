@@ -44,27 +44,6 @@ class ParserHelper
 	}
 
 	/**
-	 * Gets the first value in an associative array where the key the list of keys provided.
-	 *
-	 * @param array $array The array to search.
-	 * @param mixed $key The keys of the value to retrieve.
-	 * @param null $default A value to use if none of the keys was found in the array.
-	 * If not provided, `null` will be returned.
-	 *
-	 * @return mixed The requested value, or `$default|null` if not found.
-	 */
-	public static function arrayGetFirst(array $array, array $keys, $default = null)
-	{
-		foreach ($keys as $key) {
-			if (isset($array[$key])) {
-				return $array[$key];
-			}
-		}
-
-		return $default;
-	}
-
-	/**
 	 * Caches magic words in a static MagicWordArray. This should include any named arguments or argument values that
 	 * need to be localized, along with any other magic words not already registered with the parser by other means,
 	 * such as parser functions, tags, and so forth.
@@ -75,6 +54,8 @@ class ParserHelper
 	 */
 	public static function cacheMagicWords(array $magicWords)
 	{
+		// TODO: Move most of the calls to this to something more appropriate. Magic Words should be unique and not
+		// appropriated for values. This should be straight-up localization and nothing more.
 		if (!isset(self::$mwArray)) {
 			self::$mwArray = new MagicWordArray($magicWords);
 		} else {
@@ -94,38 +75,11 @@ class ParserHelper
 		return self::magicKeyEqualsValue($magicArgs, self::NA_CASE, self::AV_ANY);
 	}
 
-	public static function magicKeyEqualsValue($magicArguments, $key, $value)
-	{
-		$arrayValue = self::arrayGet($magicArguments, $key);
-		return
-			!is_null($arrayValue) &&
-			MagicWord::get($value)->matchStartToEnd($arrayValue);
-	}
-
 	public static function magicValueEquals($value, $magicWord)
 	{
 		// No point in accessing cache for this, as it will only add overhead. MW caches individual magic words on
 		// first access anyway.
 		return MagicWord::get($magicWord)->matchStartToEnd($value);
-	}
-
-	/**
-	 * Checks the debug argument to see if it's boolean or 'always'.
-	 *
-	 * @param Parser $parser The parser in use.
-	 * @param array|null $magicArgs The magic word arguments as created by getMagicArgs().
-	 *
-	 * @return boolean
-	 *
-	 */
-	public static function checkDebug(Parser $parser, array $magicArgs)
-	{
-		$debug = self::arrayGet($magicArgs, self::NA_DEBUG);
-		// show('Debug parameter: ', $debug);
-		return $parser->getOptions()->getIsPreview()
-			? boolval($debug)
-			: MagicWord::get(self::AV_ALWAYS)->matchStartToEnd($debug);
-		// show('Debug final: ', $debug);
 	}
 
 	/**
@@ -140,11 +94,11 @@ class ParserHelper
 	 */
 	public static function checkDebugMagic(Parser $parser, array $args)
 	{
-		$debug = self::getArgumentValue(self::NA_DEBUG, $args);
+		$debug = self::arrayGet($args, self::NA_DEBUG);
 		// show('Debug parameter: ', $debug);
 		return $parser->getOptions()->getIsPreview()
 			? boolval($debug)
-			: self::magicValueEquals($debug, self::AV_ALWAYS);
+			: MagicWord::get($debug)->matchStartToEnd(self::AV_ALWAYS);
 		// show('Debug final: ', $debug);
 	}
 
@@ -161,21 +115,6 @@ class ParserHelper
 			self::arrayGet($magicArgs, self::NA_IF, true) &&
 			!self::arrayGet($magicArgs, self::NA_IFNOT, false);
 	}
-
-	public static function checkSeparator(PPFrame $frame, array $magicArgs)
-	{
-		$separator = $frame->expand(ParserHelper::arrayGet($magicArgs, self::NA_SEPARATOR, "\n"));
-		if (strlen($separator) > 1) {
-			$separator = stripcslashes($separator);
-			$first = $separator[0];
-			if (in_array($first, ['\'', '`', '"']) && $first === substr($separator, -1, 1)) {
-				return substr($separator, 1, -1);
-			}
-
-			return '';
-		}
-	}
-
 
 	/**
 	 * Expands an entire array of values using the MediaWiki pre-processor.
@@ -223,7 +162,7 @@ class ParserHelper
 	 */
 	public static function formatPFForDebug($output, $parser, $magicArgs)
 	{
-		if (ParserHelper::checkDebug($parser, $magicArgs)) {
+		if (ParserHelper::checkDebugMagic($parser, $magicArgs)) {
 			return ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false];
 		}
 
@@ -277,6 +216,7 @@ class ParserHelper
 					// show('Add anon: ', $frame->expand($value));
 					$values[] = $value;
 				} else {
+					$name = trim($name);
 					$magKey = $allowedArray->matchStartToEnd($name);
 					if ($magKey) {
 						if (isset($magic[$magKey])) {
@@ -353,6 +293,20 @@ class ParserHelper
 		return [null, $arg];
 	}
 
+	public static function getSeparator(PPFrame $frame, array $magicArgs)
+	{
+		$separator = $frame->expand(ParserHelper::arrayGet($magicArgs, self::NA_SEPARATOR, ''));
+		if (strlen($separator) > 1) {
+			$separator = stripcslashes($separator);
+			$first = $separator[0];
+			if (in_array($first, ['\'', '`', '"']) && $first === substr($separator, -1, 1)) {
+				return substr($separator, 1, -1);
+			}
+		}
+
+		return $separator;
+	}
+
 	/**
 	 * Initializes ParserHelper, caching all required magic words.
 	 *
@@ -372,6 +326,14 @@ class ParserHelper
 			self::NA_NSBASE, // These are shared here for now. There may be a better way to integrate
 			self::NA_NSID,   // them later as Riven, MetaTemplate and UespCustomCode develop.
 		]);
+	}
+
+	public static function magicKeyEqualsValue($magicArguments, $key, $value)
+	{
+		$arrayValue = self::arrayGet($magicArguments, $key);
+		return
+			!is_null($arrayValue) &&
+			MagicWord::get($value)->matchStartToEnd($arrayValue);
 	}
 
 	public static function magicWordIn($word, $allowedKeys)
@@ -416,8 +378,20 @@ class ParserHelper
 			$parser->setHook($synonym, $callback);
 		}
 	}
-}
 
+	public static function transformArgs(array $args)
+	{
+		$retval = [];
+		foreach ($args as $key => $value) {
+			$match = self::$mwArray->matchStartToEnd($key);
+			if ($match) {
+				$retval[$match] = $value;
+			}
+		}
+
+		return $retval;
+	}
+}
 /**
  * Where to log to for the global functions that need it.
  */
