@@ -36,11 +36,9 @@ class ParserHelper
 	 */
 	public static function arrayGet(array $array, $key, $default = null)
 	{
-		if (isset($array[$key]) || array_key_exists($key, $array)) {
-			return $array[$key];
-		}
-
-		return $default;
+		return (isset($array[$key]) || array_key_exists($key, $array))
+			? $array[$key]
+			: $default;
 	}
 
 	/**
@@ -55,7 +53,8 @@ class ParserHelper
 	public static function cacheMagicWords(array $magicWords)
 	{
 		// TODO: Move most of the calls to this to something more appropriate. Magic Words should be unique and not
-		// appropriated for values. This should be straight-up localization and nothing more.
+		// appropriated for values. This should be straight-up localization and nothing more. Check how image options
+		// work, as these are likely to be similar.
 		if (!isset(self::$mwArray)) {
 			self::$mwArray = new MagicWordArray($magicWords);
 		} else {
@@ -75,13 +74,6 @@ class ParserHelper
 		return self::magicKeyEqualsValue($magicArgs, self::NA_CASE, self::AV_ANY);
 	}
 
-	public static function magicValueEquals($value, $magicWord)
-	{
-		// No point in accessing cache for this, as it will only add overhead. MW caches individual magic words on
-		// first access anyway.
-		return MagicWord::get($magicWord)->matchStartToEnd($value);
-	}
-
 	/**
 	 * Checks the debug argument to see if it's boolean or 'always'. This variant of checkDebug expects the keys to be
 	 * magic word values rather than magic word IDs.
@@ -92,14 +84,13 @@ class ParserHelper
 	 * @return boolean
 	 *
 	 */
-	public static function checkDebugMagic(Parser $parser, array $args)
+	public static function checkDebugMagic(Parser $parser, array $magicArgs)
 	{
-		$debug = self::arrayGet($args, self::NA_DEBUG);
+		$debug = $magicArgs[self::NA_DEBUG];
 		// show('Debug parameter: ', $debug);
 		return $parser->getOptions()->getIsPreview()
 			? boolval($debug)
-			: MagicWord::get($debug)->matchStartToEnd(self::AV_ALWAYS);
-		// show('Debug final: ', $debug);
+			: MagicWord::get(self::AV_ALWAYS)->matchStartToEnd($debug);
 	}
 
 	/**
@@ -240,32 +231,6 @@ class ParserHelper
 	}
 
 	/**
-	 * Gets the value in an array where the key is one of the magic word's synonyms.
-	 *
-	 * @param string $word The magic word to search for.
-	 * @param array $args The array to search.
-	 * @param bool $default The default value, if nothing matches.
-	 *
-	 * @return mixed
-	 *
-	 */
-	public static function getArgumentValue($word, array $args, $default = false)
-	{
-		foreach ($args as $key => $value) {
-			$match = self::$mwArray->matchStartToEnd($key);
-			// show('Match: ', $match);
-			if ($match === $word) {
-				// show($key, ' == ', $word);
-				return $value;
-			}
-
-			// show($key, '=', $value, ' != ', $word);
-		}
-
-		return $default;
-	}
-
-	/**
 	 * Returns a string or part node split into a key/value pair, with the key expanded, if necessary, into a string.
 	 * The return value is always an array. If the argument is of the wrong type, or isn't a key/value pair, the key
 	 * will be returned as null and the value will be the original argument.
@@ -317,6 +282,7 @@ class ParserHelper
 		self::cacheMagicWords([
 			self::AV_ANY,
 			self::AV_ALWAYS,
+
 			self::NA_CASE,
 			self::NA_DEBUG,
 			self::NA_IF,
@@ -328,6 +294,17 @@ class ParserHelper
 		]);
 	}
 
+	/**
+	 * Determines if the word at a specific key matches a certain value after everything's converted to their
+	 * respective IDs.
+	 *
+	 * @param mixed $magicArguments The arguments they key can be found in.
+	 * @param mixed $key The key to search for.
+	 * @param mixed $value The value to match with.
+	 *
+	 * @return boolean True if the value at the specifc key was the same as the value specified.
+	 *
+	 */
 	public static function magicKeyEqualsValue($magicArguments, $key, $value)
 	{
 		$arrayValue = self::arrayGet($magicArguments, $key);
@@ -336,6 +313,15 @@ class ParserHelper
 			MagicWord::get($value)->matchStartToEnd($arrayValue);
 	}
 
+	/**
+	 * Determines whether a plain-text word maps to a Magic Word ID from the specified set.
+	 *
+	 * @param mixed $word The word to check.
+	 * @param mixed $allowedKeys The keys that it should be found in.
+	 *
+	 * @return The key the word maps to, if found.
+	 *
+	 */
 	public static function magicWordIn($word, $allowedKeys)
 	{
 		$allowedMagic = new MagicWordArray($allowedKeys);
