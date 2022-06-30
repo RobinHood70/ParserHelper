@@ -11,6 +11,8 @@ class ParserHelper
 	const NA_DEBUG = 'parserhelper-debug';
 	const NA_IF = 'parserhelper-if';
 	const NA_IFNOT = 'parserhelper-ifnot';
+	const NA_SEPARATOR = 'parserhelper-separator';
+
 	const NA_NSBASE = 'namespaceinfo-ns_base';
 	const NA_NSID = 'namespaceinfo-ns_id';
 
@@ -34,12 +36,6 @@ class ParserHelper
 	 */
 	public static function arrayGet(array $array, $key, $default = null)
 	{
-		/*
-		if (is_array($key)) {
-			show(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
-		}
-		*/
-
 		if (isset($array[$key]) || array_key_exists($key, $array)) {
 			return $array[$key];
 		}
@@ -95,8 +91,22 @@ class ParserHelper
 	 */
 	public static function checkAnyCase(array $magicArgs)
 	{
-		$caseValue = self::arrayGet($magicArgs, self::NA_CASE);
-		return self::$mwArray->matchStartToEnd($caseValue) === self::AV_ANY;
+		return self::magicKeyEqualsValue($magicArgs, self::NA_CASE, self::AV_ANY);
+	}
+
+	public static function magicKeyEqualsValue($magicArguments, $key, $value)
+	{
+		$arrayValue = self::arrayGet($magicArguments, $key);
+		return
+			!is_null($arrayValue) &&
+			MagicWord::get($value)->matchStartToEnd($arrayValue);
+	}
+
+	public static function magicValueEquals($value, $magicWord)
+	{
+		// No point in accessing cache for this, as it will only add overhead. MW caches individual magic words on
+		// first access anyway.
+		return MagicWord::get($magicWord)->matchStartToEnd($value);
 	}
 
 	/**
@@ -134,7 +144,7 @@ class ParserHelper
 		// show('Debug parameter: ', $debug);
 		return $parser->getOptions()->getIsPreview()
 			? boolval($debug)
-			: MagicWord::get(self::AV_ALWAYS)->matchStartToEnd($debug);
+			: self::magicValueEquals($debug, self::AV_ALWAYS);
 		// show('Debug final: ', $debug);
 	}
 
@@ -151,6 +161,21 @@ class ParserHelper
 			self::arrayGet($magicArgs, self::NA_IF, true) &&
 			!self::arrayGet($magicArgs, self::NA_IFNOT, false);
 	}
+
+	public static function checkSeparator(PPFrame $frame, array $magicArgs)
+	{
+		$separator = $frame->expand(ParserHelper::arrayGet($magicArgs, self::NA_SEPARATOR, "\n"));
+		if (strlen($separator) > 1) {
+			$separator = stripcslashes($separator);
+			$first = $separator[0];
+			if (in_array($first, ['\'', '`', '"']) && $first === substr($separator, -1, 1)) {
+				return substr($separator, 1, -1);
+			}
+
+			return '';
+		}
+	}
+
 
 	/**
 	 * Expands an entire array of values using the MediaWiki pre-processor.
@@ -342,15 +367,18 @@ class ParserHelper
 			self::NA_DEBUG,
 			self::NA_IF,
 			self::NA_IFNOT,
+			self::NA_SEPARATOR,
+
 			self::NA_NSBASE, // These are shared here for now. There may be a better way to integrate
 			self::NA_NSID,   // them later as Riven, MetaTemplate and UespCustomCode develop.
 		]);
 	}
 
-	public static function magicWordIn($word, $allowedWords)
+	public static function magicWordIn($word, $allowedKeys)
 	{
-		$key = self::$mwArray->matchStartToEnd($word);
-		return is_bool($key) ? null : in_array($key, $allowedWords);
+		$allowedMagic = new MagicWordArray($allowedKeys);
+		$key = $allowedMagic->matchStartToEnd($word);
+		return $key;
 	}
 
 	/**
@@ -433,7 +461,7 @@ function formatQuery(IDatabase $db, ResultWrapper $result = null)
 
 function isDev()
 {
-	return in_array($_SERVER['SERVER_NAME'], ['dev.uesp.net', 'rob-centob']);
+	return in_array($_SERVER['SERVER_NAME'], ['content3.uesp.net', 'dev.uesp.net', 'rob-centos']);
 }
 
 /**
