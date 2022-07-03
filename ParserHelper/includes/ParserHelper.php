@@ -7,6 +7,8 @@ class ParserHelper
 {
 	const AV_ANY = 'parserhelper-any';
 	const AV_ALWAYS = 'parserhelper-always';
+
+	const NA_ALLOWEMPTY = 'riven-allowempty';
 	const NA_CASE = 'parserhelper-case';
 	const NA_DEBUG = 'parserhelper-debug';
 	const NA_IF = 'parserhelper-if';
@@ -181,6 +183,34 @@ class ParserHelper
 	}
 
 	/**
+	 * Returns a string or part node split into a key/value pair, with the key expanded, if necessary, into a string.
+	 * The return value is always an array. If the argument is of the wrong type, or isn't a key/value pair, the key
+	 * will be returned as null and the value will be the original argument.
+	 *
+	 * @param PPFrame $frame
+	 * @param string|PPNode_Hash_Tree $arg
+	 *
+	 * @return array
+	 */
+	public static function getKeyValue(PPFrame $frame, $arg)
+	{
+		if (is_string($arg)) {
+			$split = explode('=', $arg, 2);
+			if (count($split) == 2) {
+				return [$split[0], $split[1]];
+			}
+		} elseif ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
+			$split = $arg->splitArg();
+			$indexNode = $split['index'];
+			$key = strlen($indexNode) ? null : $frame->expand($split['name']);
+			return [$key, $split['value']];
+		}
+
+		// This handles both value-only nodes and unexpected values.
+		return [null, $arg];
+	}
+
+	/**
 	 * Returns an associative array of the named arguments that are allowed for a magic word or parser function along
 	 * with their values. The function checks all localized variants for a named argument and returns their associated
 	 * values under a single unified key.
@@ -230,34 +260,6 @@ class ParserHelper
 		return [$magic, $values, $dupes];
 	}
 
-	/**
-	 * Returns a string or part node split into a key/value pair, with the key expanded, if necessary, into a string.
-	 * The return value is always an array. If the argument is of the wrong type, or isn't a key/value pair, the key
-	 * will be returned as null and the value will be the original argument.
-	 *
-	 * @param PPFrame $frame
-	 * @param string|PPNode_Hash_Tree $arg
-	 *
-	 * @return array
-	 */
-	public static function getKeyValue(PPFrame $frame, $arg)
-	{
-		if (is_string($arg)) {
-			$split = explode('=', $arg, 2);
-			if (count($split) == 2) {
-				return [$split[0], $split[1]];
-			}
-		} elseif ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
-			$split = $arg->splitArg();
-			$indexNode = $split['index'];
-			$key = strlen($indexNode) ? null : $frame->expand($split['name']);
-			return [$key, $split['value']];
-		}
-
-		// This handles both value-only nodes and unexpected values.
-		return [null, $arg];
-	}
-
 	public static function getSeparator(PPFrame $frame, array $magicArgs)
 	{
 		$separator = $frame->expand(ParserHelper::arrayGet($magicArgs, self::NA_SEPARATOR, ''));
@@ -283,6 +285,7 @@ class ParserHelper
 			self::AV_ANY,
 			self::AV_ALWAYS,
 
+			self::NA_ALLOWEMPTY,
 			self::NA_CASE,
 			self::NA_DEBUG,
 			self::NA_IF,
@@ -346,6 +349,42 @@ class ParserHelper
 		}
 
 		return null;
+	}
+
+	/**
+	 * Joins strings conditionally based on allowempty and separator values.
+	 *
+	 * @param PPFrame $frame The frame in use.
+	 * @param array $magicArgs The magic arguments from the function call.
+	 * @param array $items	The strings to join.
+	 *
+	 * @return A concatenation of all strings or all non-empty strings, depending on the parameters.
+	 *
+	 */
+	public static function selectiveJoin(PPFrame $frame, array $magicArgs, array $items)
+	{
+		$output = '';
+		$separator = ParserHelper::getSeparator($frame, $magicArgs);
+		$allowEmpty = ParserHelper::arrayGet($magicArgs, ParserHelper::NA_ALLOWEMPTY);
+		if ($allowEmpty) {
+			$allowEmpty = $frame->expand($allowEmpty);
+		}
+
+		$first = true;
+
+		foreach ($items as $item) {
+			if ($allowEmpty || strlen($item) > 0) {
+				if ($first) {
+					$first = false;
+				} else {
+					$output .= $separator;
+				}
+
+				$output .= $item;
+			}
+		}
+
+		return $output;
 	}
 
 	/**
@@ -461,8 +500,7 @@ function show(...$msgs)
 		return;
 	}
 
-	echo '
-    <pre>';
+	echo '<pre>';
 	foreach ($msgs as $msg) {
 		if ($msg) {
 			print_r(htmlspecialchars(print_r($msg, true)));
