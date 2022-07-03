@@ -1,15 +1,15 @@
 <?php
 $magicWords['en'] = [
-	ParserHelper::AV_ANY => [0, 'any'],
-	ParserHelper::AV_ALWAYS => [0, 'always'],
+	'parserhelper-any' => [0, 'any'],
+	'parserhelper-always' => [0, 'always'],
 
-	ParserHelper::NA_ALLOWEMPTY => [0, 'allowempty'],
-	ParserHelper::NA_CASE => [0, 'case'],
-	ParserHelper::NA_DEBUG => [0, 'debug'],
-	ParserHelper::NA_IF => [0, 'if'],
-	ParserHelper::NA_IFNOT => [0, 'ifnot'],
-	ParserHelper::NA_SEPARATOR => [0, 'separator'],
+	'parserhelper-allowempty' => [0, 'allowempty'],
+	'parserhelper-case' => [0, 'case'],
+	'parserhelper-debug' => [0, 'debug'],
+	'parserhelper-if' => [0, 'if'],
+	'parserhelper-ifnot' => [0, 'ifnot'],
+	'parserhelper-separator' => [0, 'separator'],
 
-	ParserHelper::NA_NSBASE => [0, 'ns_base'],
-	ParserHelper::NA_NSID => [0, 'ns_id'],
+	'parserhelper-ns_base' => [0, 'ns_base'],
+	'parserhelper-ns_id' => [0, 'ns_id'],
 ];
