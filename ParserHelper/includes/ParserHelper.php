@@ -352,42 +352,6 @@ class ParserHelper
 	}
 
 	/**
-	 * Joins strings conditionally based on allowempty and separator values.
-	 *
-	 * @param PPFrame $frame The frame in use.
-	 * @param array $magicArgs The magic arguments from the function call.
-	 * @param array $items	The strings to join.
-	 *
-	 * @return A concatenation of all strings or all non-empty strings, depending on the parameters.
-	 *
-	 */
-	public static function selectiveJoin(PPFrame $frame, array $magicArgs, array $items)
-	{
-		$output = '';
-		$separator = ParserHelper::getSeparator($frame, $magicArgs);
-		$allowEmpty = ParserHelper::arrayGet($magicArgs, ParserHelper::NA_ALLOWEMPTY);
-		if ($allowEmpty) {
-			$allowEmpty = $frame->expand($allowEmpty);
-		}
-
-		$first = true;
-
-		foreach ($items as $item) {
-			if ($allowEmpty || strlen($item) > 0) {
-				if ($first) {
-					$first = false;
-				} else {
-					$output .= $separator;
-				}
-
-				$output .= $item;
-			}
-		}
-
-		return $output;
-	}
-
-	/**
 	 * Calls setHook() for all synonyms of a tag.
 	 *
 	 * @param Parser $parser The parser to register the tag names with.
