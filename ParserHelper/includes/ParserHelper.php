@@ -8,15 +8,15 @@ class ParserHelper
 	const AV_ANY = 'parserhelper-any';
 	const AV_ALWAYS = 'parserhelper-always';
 
-	const NA_ALLOWEMPTY = 'riven-allowempty';
+	const NA_ALLOWEMPTY = 'parserhelper-allowempty';
 	const NA_CASE = 'parserhelper-case';
 	const NA_DEBUG = 'parserhelper-debug';
 	const NA_IF = 'parserhelper-if';
 	const NA_IFNOT = 'parserhelper-ifnot';
 	const NA_SEPARATOR = 'parserhelper-separator';
 
-	const NA_NSBASE = 'namespaceinfo-ns_base';
-	const NA_NSID = 'namespaceinfo-ns_id';
+	const NA_NSBASE = 'parserhelper-ns_base';
+	const NA_NSID = 'parserhelper-ns_id';
 
 	/**
 	 * Cache for localized magic words.
