@@ -1,4 +1,5 @@
 <?php
+$magicWords = [];
 $magicWords['en'] = [
 	'parserhelper-any' => [0, 'any'],
 	'parserhelper-always' => [0, 'always'],
