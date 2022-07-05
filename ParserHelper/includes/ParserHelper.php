@@ -155,11 +155,12 @@ class ParserHelper
 	 */
 	public static function formatPFForDebug($output, $parser, $magicArgs)
 	{
-		if (ParserHelper::checkDebugMagic($parser, $magicArgs)) {
-			return ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false];
-		}
-
-		return [$output, 'noparse' => false];
+		return [
+			ParserHelper::checkDebugMagic($parser, $magicArgs)
+				? '<pre>' . htmlspecialchars($output) . '</pre>'
+				: $output,
+			'noparse' => false
+		];
 	}
 
 	/**
