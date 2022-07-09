@@ -86,9 +86,9 @@ class ParserHelper
 	 * @return boolean
 	 *
 	 */
-	public static function checkDebugMagic(Parser $parser, array $magicArgs)
+	public static function checkDebugMagic(Parser $parser, PPFrame $frame, array $magicArgs)
 	{
-		$debug = $magicArgs[self::NA_DEBUG];
+		$debug = self::arrayGet($magicArgs, self::NA_DEBUG, false);
 		// show('Debug parameter: ', $debug);
 		return $parser->getOptions()->getIsPreview()
 			? boolval($debug)
@@ -119,11 +119,19 @@ class ParserHelper
 	 *
 	 * @return array
 	 */
-	public static function expandArray(PPFrame $frame, array $values, $flags = 0)
+	public static function expandArray(PPFrame $frame, array $values, $trim = false)
 	{
 		$retval = [];
-		foreach ($values as $value) {
-			$retval[] = $frame->expand($value, $flags);
+
+		// Micro-optimization: only check outside loop, not inside.
+		if ($trim) {
+			foreach ($values as $value) {
+				$retval[] = trim($frame->expand($value));
+			}
+		} else {
+			foreach ($values as $value) {
+				$retval[] = $frame->expand($value);
+			}
 		}
 
 		return $retval;
@@ -153,14 +161,11 @@ class ParserHelper
 	 * @return string The modified text.
 	 *
 	 */
-	public static function formatPFForDebug($output, $parser, $magicArgs)
+	public static function formatPFForDebug($output, $debug = false, $noparse = false)
 	{
-		return [
-			ParserHelper::checkDebugMagic($parser, $magicArgs)
-				? '<pre>' . htmlspecialchars($output) . '</pre>'
-				: $output,
-			'noparse' => false
-		];
+		return $debug
+			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false]
+			: [$output, 'noparse' => $noparse];
 	}
 
 	/**
@@ -172,15 +177,13 @@ class ParserHelper
 	 * @return string The modified text.
 	 *
 	 */
-	public static function formatTagForDebug($output, $debug)
+	public static function formatTagForDebug($output, $debug = false)
 	{
 		// It ended up that for both the cases of this so far, we needed to process the debug value before getting
 		// here, so I made the debug check a simple boolean.
-		if ($debug) {
-			return ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki'];
-		}
-
-		return [$output, 'markerType' => 'none'];
+		return $debug
+			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki']
+			: [$output, 'markerType' => 'none'];
 	}
 
 	/**
@@ -195,16 +198,17 @@ class ParserHelper
 	 */
 	public static function getKeyValue(PPFrame $frame, $arg)
 	{
+		if ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
+			$split = $arg->splitArg();
+			$key = isset($split['index']) ? null : trim($frame->expand($split['name']));
+			return [$key, $split['value']];
+		}
+
 		if (is_string($arg)) {
 			$split = explode('=', $arg, 2);
 			if (count($split) == 2) {
 				return [$split[0], $split[1]];
 			}
-		} elseif ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
-			$split = $arg->splitArg();
-			$indexNode = $split['index'];
-			$key = strlen($indexNode) ? null : $frame->expand($split['name']);
-			return [$key, $split['value']];
 		}
 
 		// This handles both value-only nodes and unexpected values.
@@ -232,6 +236,7 @@ class ParserHelper
 		$dupes = [];
 		$allowedArray = new MagicWordArray($allowedArgs);
 		if (count($args) && count($allowedArgs)) {
+			array_reverse($args); // Make sure last value gets processed and any others go to $dupes.
 			foreach ($args as $arg) {
 				list($name, $value) = self::getKeyValue($frame, $arg);
 				if (is_null($name)) {
@@ -246,9 +251,11 @@ class ParserHelper
 							// allows for the possibility of merging the duplicate back into values later on for cases
 							// like #splitargs where it may be desirable to have keys for the called template
 							// (e.g., separator) that overlap with those of the template.
-							$dupes[$name] = $value;
+							if (!isset($dupes[$name])) {
+								$dupes[$name] = $value;
+							}
 						} else {
-							$magic[$magKey] = $frame->expand($value);
+							$magic[$magKey] = trim($frame->expand($value));
 						}
 					} else {
 						// show('Add fake k=v: ', $frame->expand($arg));
@@ -256,6 +263,8 @@ class ParserHelper
 					}
 				}
 			}
+
+			array_reverse($values);
 		}
 
 		return [$magic, $values, $dupes];
@@ -263,7 +272,7 @@ class ParserHelper
 
 	public static function getSeparator(PPFrame $frame, array $magicArgs)
 	{
-		$separator = $frame->expand(ParserHelper::arrayGet($magicArgs, self::NA_SEPARATOR, ''));
+		$separator = ParserHelper::arrayGet($magicArgs, self::NA_SEPARATOR, '');
 		if (strlen($separator) > 1) {
 			$separator = stripcslashes($separator);
 			$first = $separator[0];
