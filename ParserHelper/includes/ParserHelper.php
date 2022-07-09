@@ -200,7 +200,7 @@ class ParserHelper
 	{
 		if ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
 			$split = $arg->splitArg();
-			$key = isset($split['index']) ? null : trim($frame->expand($split['name']));
+			$key = empty($split['index']) ? $frame->expand($split['name']) : null;
 			return [$key, $split['value']];
 		}
 
