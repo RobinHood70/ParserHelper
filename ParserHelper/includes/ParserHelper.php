@@ -236,7 +236,7 @@ class ParserHelper
 		$dupes = [];
 		$allowedArray = new MagicWordArray($allowedArgs);
 		if (count($args) && count($allowedArgs)) {
-			array_reverse($args); // Make sure last value gets processed and any others go to $dupes.
+			$args = array_reverse($args); // Make sure last value gets processed and any others go to $dupes.
 			foreach ($args as $arg) {
 				list($name, $value) = self::getKeyValue($frame, $arg);
 				if (is_null($name)) {
@@ -264,7 +264,7 @@ class ParserHelper
 				}
 			}
 
-			array_reverse($values);
+			$values = array_reverse($values);
 		}
 
 		return [$magic, $values, $dupes];
