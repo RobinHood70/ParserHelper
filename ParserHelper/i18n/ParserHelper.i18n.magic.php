@@ -13,7 +13,7 @@ $magicWords['en'] = [
 	'parserhelper-debug' => [0, 'debug'],
 	'parserhelper-if' => [0, 'if'],
 	'parserhelper-ifnot' => [0, 'ifnot'],
-	'parserhelper-separator' => [0, 'separator'],
+	'parserhelper-separator' => [0, 'separator', 'sa:separator'],
 
 	'parserhelper-ns_base' => [0, 'ns_base'],
 	'parserhelper-ns_id' => [0, 'ns_id'],
