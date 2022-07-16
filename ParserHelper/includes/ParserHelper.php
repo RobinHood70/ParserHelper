@@ -102,11 +102,12 @@ class ParserHelper
 	 *
 	 * @return boolean True if both conditions (if applicable) have been satisfied; otherwise, false.
 	 */
-	public static function checkIfs(array $magicArgs)
+	public static function checkIfs(PPFrame $frame, array $magicArgs)
 	{
-		return
-			self::arrayGet($magicArgs, self::NA_IF, true) &&
-			!self::arrayGet($magicArgs, self::NA_IFNOT, false);
+		$if = $frame->expand(self::arrayGet($magicArgs, self::NA_IF, '1'));
+		$ifnot = $frame->expand(self::arrayGet($magicArgs, self::NA_IFNOT, ''));
+
+		return !empty($if) && empty($ifnot);
 	}
 
 	/**
