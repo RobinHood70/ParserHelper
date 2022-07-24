@@ -164,10 +164,15 @@ class ParserHelper
 	 */
 	public static function formatPFForDebug($output, $debug = false, $noparse = false)
 	{
-		return
-			strlen($output) == 0 ? '' :
-			$debug ? ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false] :
-			[$output, 'noparse' => $noparse];
+		if (strlen($output) == 0) {
+			return '';
+		}
+
+		if ($debug) {
+			return ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false];
+		}
+
+		return 		[$output, 'noparse' => $noparse];
 	}
 
 	/**
