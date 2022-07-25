@@ -88,7 +88,7 @@ class ParserHelper
 	 */
 	public static function checkDebugMagic(Parser $parser, PPFrame $frame, array $magicArgs)
 	{
-		$debug = self::arrayGet($magicArgs, self::NA_DEBUG, false);
+		$debug = $frame->expand(self::arrayGet($magicArgs, self::NA_DEBUG, false));
 		// RHDebug::show('Debug parameter: ', $debug);
 		return $parser->getOptions()->getIsPreview()
 			? boolval($debug)
@@ -142,8 +142,9 @@ class ParserHelper
 	 * Finds the magic word ID that corresponds to the value provided.
 	 *
 	 * @param string $value The value to look up.
+	 * @param null $default The value to use if $value is not found.
 	 *
-	 * @return string|false
+	 * @return [type]
 	 *
 	 */
 	public static function findMagicID($value, $default = null)
@@ -156,8 +157,8 @@ class ParserHelper
 	 * Standardizes debug text formatting for parser functions.
 	 *
 	 * @param string $output The original text being output.
-	 * @param Parser $parser The parser in use.
-	 * @param $magicArgs The list of magic word arguments, typically from getMagicArgs().
+	 * @param bool $debug Whether to return debug or regular text.
+	 * @param bool $noparse If this falls through to regular output, whether or not to parse that output.
 	 *
 	 * @return string The modified text.
 	 *
@@ -198,8 +199,8 @@ class ParserHelper
 	 * The return value is always an array. If the argument is of the wrong type, or isn't a key/value pair, the key
 	 * will be returned as null and the value will be the original argument.
 	 *
-	 * @param PPFrame $frame
-	 * @param string|PPNode_Hash_Tree $arg
+	 * @param PPFrame $frame The frame in use.
+	 * @param string|PPNode_Hash_Tree $arg The argument to work on.
 	 *
 	 * @return array
 	 */
