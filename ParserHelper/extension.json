@@ -19,7 +19,8 @@
 		"ParserHelperMagic": "i18n/ParserHelper.i18n.magic.php"
 	},
 	"AutoloadClasses": {
-		"ParserHelper": "includes/ParserHelper.php"
+		"ParserHelper": "includes/ParserHelper.php",
+		"RHDebug": "includes/RHDebug.php"
 	},
 	"manifest_version": 1
 }

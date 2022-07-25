@@ -89,7 +89,7 @@ class ParserHelper
 	public static function checkDebugMagic(Parser $parser, PPFrame $frame, array $magicArgs)
 	{
 		$debug = self::arrayGet($magicArgs, self::NA_DEBUG, false);
-		// show('Debug parameter: ', $debug);
+		// RHDebug::show('Debug parameter: ', $debug);
 		return $parser->getOptions()->getIsPreview()
 			? boolval($debug)
 			: MagicWord::get(self::AV_ALWAYS)->matchStartToEnd($debug);
@@ -247,7 +247,7 @@ class ParserHelper
 			foreach ($args as $arg) {
 				list($name, $value) = self::getKeyValue($frame, $arg);
 				if (is_null($name)) {
-					// show('Add anon: ', $frame->expand($value));
+					// RHDebug::show('Add anon: ', $frame->expand($value));
 					$values[] = $value;
 				} else {
 					$name = trim($name);
@@ -265,7 +265,7 @@ class ParserHelper
 							$magic[$magKey] = trim($frame->expand($value));
 						}
 					} else {
-						// show('Add fake k=v: ', $frame->expand($arg));
+						// RHDebug::show('Add fake k=v: ', $frame->expand($arg));
 						$values[] = $arg;
 					}
 				}
@@ -299,9 +299,6 @@ class ParserHelper
 	public static function init()
 	{
 		self::cacheMagicWords([
-			self::AV_ANY,
-			self::AV_ALWAYS,
-
 			self::NA_ALLOWEMPTY,
 			self::NA_CASE,
 			self::NA_DEBUG,
@@ -330,42 +327,7 @@ class ParserHelper
 		$arrayValue = self::arrayGet($magicArguments, $key);
 		return
 			!is_null($arrayValue) &&
-			MagicWord::get($value)->matchStartToEnd($arrayValue);
-	}
-
-	/**
-	 * Determines whether a plain-text word maps to a Magic Word ID from the specified set.
-	 *
-	 * @param mixed $word The word to check.
-	 * @param mixed $allowedKeys The keys that it should be found in.
-	 *
-	 * @return The key the word maps to, if found.
-	 *
-	 */
-	public static function magicWordIn($word, $allowedKeys)
-	{
-		$allowedMagic = new MagicWordArray($allowedKeys);
-		$key = $allowedMagic->matchStartToEnd($word);
-		return $key;
-	}
-
-	/**
-	 * Primitive null coalescing for older versions of PHP.
-	 *
-	 * @param mixed ...$args The arguments to evaluate.
-	 *
-	 * @return mixed|null
-	 */
-	public static function nullCoalesce(...$args)
-	{
-		// Can be replaced with actual null coalescing operator in PHP 7+.
-		foreach ($args as $arg) {
-			if (!is_null($arg)) {
-				return $arg;
-			}
-		}
-
-		return null;
+			self::$mwArray->matchStartToEnd($arrayValue) === $value;
 	}
 
 	/**
@@ -380,7 +342,15 @@ class ParserHelper
 	 */
 	public static function setHookSynonyms(Parser $parser, $id, callable $callback)
 	{
-		foreach (MagicWord::get($id)->getSynonyms() as $synonym) {
+		global $wgContLang;
+
+		$magicWord = MagicWord::get($id);
+		$case = $magicWord->isCaseSensitive();
+		foreach ($magicWord->getSynonyms() as $synonym) {
+			if (!$case) {
+				$synonym = $wgContLang->lc($synonym);
+			}
+
 			$parser->setHook($synonym, $callback);
 		}
 	}
@@ -397,135 +367,4 @@ class ParserHelper
 
 		return $retval;
 	}
-}
-/**
- * Where to log to for the global functions that need it.
- */
-define('PH_LOG_FILE', 'ParserHelperLog.txt');
-
-/**
- * Tries to send a popup message via Javascript.
- *
- * @param mixed $msg The message to send.
- *
- * @return void
- */
-function alert($msg)
-{
-	if (!isDev()) {
-		return;
-	}
-
-	echo "<script>alert(\" $msg\")</script>";
-}
-
-/**
- * Returns the last query run along with the number of rows affected, if any.
- *
- * @param IDatabase $db
- * @param ResultWrapper|null $result
- *
- * @return string The text of the query and the result count.
- *
- */
-function formatQuery(IDatabase $db, ResultWrapper $result = null)
-{
-	if (!isDev()) {
-		return;
-	}
-
-	// MW 1.28+: $db = $result->getDB();
-	$retval = $result ? $db->numRows($result) . ' rows returned.' : '';
-	return $db->lastQuery() . "\n\n" . $retval;
-}
-
-function isDev()
-{
-	return in_array($_SERVER['SERVER_NAME'], ['content3.uesp.net', 'dev.uesp.net', 'rob-centos']);
-}
-
-/**
- * Logs text to the file provided in the PH_LOG_FILE define.
- *
- * @param string $text The text to add to the log.
- *
- * @return void
- *
- */
-function logFunctionText($text = '')
-{
-	if (!isDev()) {
-		return;
-	}
-
-	$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[1];
-	$method = $caller['function'];
-	if (isset($caller['class'])) {
-		$method = $caller['class'] . '::' . $method;
-	}
-
-	writeFile($method, ': ', $text);
-}
-
-/**
- * Displays the provided message(s) on-screen, if possible.
- *
- * @param mixed ...$msgs
- *
- * @return void
- *
- */
-function show(...$msgs)
-{
-	if (!isDev()) {
-		return;
-	}
-
-	echo '<pre>';
-	foreach ($msgs as $msg) {
-		if ($msg) {
-			print_r(htmlspecialchars(print_r($msg, true)));
-		}
-	}
-
-	echo '</pre>';
-}
-
-/**
- * Writes the provided text to the log file specified in PH_LOG_FILE.
- *
- * @param mixed ...$msgs What to log.
- *
- * @return void
- *
- */
-function writeFile(...$msgs)
-{
-	writeAnyFile(PH_LOG_FILE, ...$msgs);
-}
-
-/**
- * Logs the provided text to the specified file.
- *
- * @param mixed $file The file to output to.
- * @param mixed ...$msgs What to log.
- *
- * @return void
- *
- */
-function writeAnyFile($file, ...$msgs)
-{
-	if (!isDev()) {
-		return;
-	}
-
-	$handle = fopen($file, 'a') or die("Cannot open file: $file");
-	foreach ($msgs as $msg) {
-		$msg2 = print_r($msg, true);
-		fwrite($handle, $msg2);
-	}
-
-	fwrite($handle, "\n");
-	fflush($handle);
-	fclose($handle);
 }
