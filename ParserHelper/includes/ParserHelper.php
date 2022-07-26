@@ -388,4 +388,25 @@ abstract class ParserHelper
 	 *
 	 */
 	public abstract function getMagicWord($id);
+
+	/**
+	 * Retrieves the parser's strip state object.
+	 *
+	 * @param Parser $parser THe parser in use.
+	 *
+	 * @return StripState
+	 *
+	 */
+	public abstract function getStripState(Parser $parser);
+
+	/**
+	 * Calls $parser->replaceLinkHoldersText(), bypassing the private access modifier if needed.
+	 *
+	 * @param Parser $parser The parser in use;
+	 * @param mixed $output The output text to replace in.
+	 *
+	 * @return stroing
+	 *
+	 */
+	public abstract function replaceLinkHoldersText(Parser $parser, $output);
 }

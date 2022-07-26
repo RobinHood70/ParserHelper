@@ -34,6 +34,15 @@ class ParserHelper28 extends ParserHelper
     public function getMagicWord($id)
     {
         return MagicWord::get($id);
-        // return MediaWikiServices::getInstance()->getMagicWordFactory()->get($id);
+    }
+
+    public function getStripState(Parser $parser)
+    {
+        return $parser->mStripState;
+    }
+
+    public function replaceLinkHoldersText($parser, $output)
+    {
+        return $parser->replaceLinkHoldersText($output);
     }
 }
