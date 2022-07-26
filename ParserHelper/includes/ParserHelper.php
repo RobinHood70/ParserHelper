@@ -3,7 +3,7 @@
 /**
  * Provides a number of library routines, mostly related to the parser along with a few generic global methods.
  */
-class ParserHelper
+abstract class ParserHelper
 {
 	const AV_ANY = 'parserhelper-any';
 	const AV_ALWAYS = 'parserhelper-always';
@@ -19,28 +19,41 @@ class ParserHelper
 	const NA_NSID = 'parserhelper-ns_id';
 
 	/**
+	 * Instance variable for singleton.
+	 *
+	 * @var ParserHelper
+	 */
+	private static $instance;
+
+	/**
 	 * Cache for localized magic words.
 	 *
 	 * @var MagicWordArray
 	 */
-	private static $mwArray;
+	private $mwArray;
 
 	/**
-	 * Gets a value from an array with proper existence checks beforehand.
-	 * This can be replaced with `$array[$key] ?? $default` if upgraded to PHP 7.
+	 * Singleton instance.
 	 *
-	 * @param array $array The array to search.
-	 * @param mixed $key The key of the value to retrieve.
-	 * @param null $default A value to use if the key is not found in the array.
-	 * If not provided, `null` will be returned.
+	 * @return ParserHelper
 	 *
-	 * @return mixed The requested value, or `$default|null` if not found.
 	 */
-	public static function arrayGet(array $array, $key, $default = null)
+	public static function getInstance()
 	{
-		return (isset($array[$key]) || array_key_exists($key, $array))
-			? $array[$key]
-			: $default;
+		if (!self::$instance) {
+			$useNew = defined('MW_VERSION') && version_compare(constant('MW_VERSION'), '1.35', '>=');
+			if ($useNew) {
+				require_once(__DIR__ . '/ParserHelper35.php');
+				self::$instance = new ParserHelper35();
+			} else {
+				require_once(__DIR__ . '/ParserHelper28.php');
+				self::$instance = new ParserHelper28();
+			}
+
+			self::$instance->init();
+		}
+
+		return self::$instance;
 	}
 
 	/**
@@ -52,15 +65,16 @@ class ParserHelper
 	 *
 	 * @return void
 	 */
-	public static function cacheMagicWords(array $magicWords)
+	public function cacheMagicWords(array $magicWords)
 	{
 		// TODO: Move most of the calls to this to something more appropriate. Magic Words should be unique and not
 		// appropriated for values. This should be straight-up localization and nothing more. Check how image options
 		// work, as these are likely to be similar.
-		if (!isset(self::$mwArray)) {
-			self::$mwArray = new MagicWordArray($magicWords);
+		if (!isset($this->mwArray)) {
+			// RHshow($magicWords);
+			$this->mwArray = new MagicWordArray($magicWords);
 		} else {
-			self::$mwArray->addArray($magicWords);
+			$this->mwArray->addArray($magicWords);
 		}
 	}
 
@@ -71,9 +85,9 @@ class ParserHelper
 	 *
 	 * @return boolean True if `case=any` or any localized equivalent was found in the argument list.
 	 */
-	public static function checkAnyCase(array $magicArgs)
+	public function checkAnyCase(array $magicArgs)
 	{
-		return self::magicKeyEqualsValue($magicArgs, self::NA_CASE, self::AV_ANY);
+		return $this->magicKeyEqualsValue($magicArgs, self::NA_CASE, self::AV_ANY);
 	}
 
 	/**
@@ -86,13 +100,13 @@ class ParserHelper
 	 * @return boolean
 	 *
 	 */
-	public static function checkDebugMagic(Parser $parser, PPFrame $frame, array $magicArgs)
+	public function checkDebugMagic(Parser $parser, PPFrame $frame, array $magicArgs)
 	{
-		$debug = $frame->expand(self::arrayGet($magicArgs, self::NA_DEBUG, false));
-		// RHDebug::show('Debug parameter: ', $debug);
+		$debug = $frame->expand($this->arrayGet($magicArgs, self::NA_DEBUG, false));
+		// RHshow('Debug param: ', boolval($debug) ? 'Yes' : 'No', "\nIs preview: ", $parser->getOptions()->getIsPreview(), "\nDebug word: ", $this->getMagicWord(self::AV_ALWAYS)->matchStartToEnd($debug));
 		return $parser->getOptions()->getIsPreview()
 			? boolval($debug)
-			: MagicWord::get(self::AV_ALWAYS)->matchStartToEnd($debug);
+			: $this->getMagicWord(self::AV_ALWAYS)->matchStartToEnd($debug);
 	}
 
 	/**
@@ -102,10 +116,10 @@ class ParserHelper
 	 *
 	 * @return boolean True if both conditions (if applicable) have been satisfied; otherwise, false.
 	 */
-	public static function checkIfs(PPFrame $frame, array $magicArgs)
+	public function checkIfs(PPFrame $frame, array $magicArgs)
 	{
-		$if = $frame->expand(self::arrayGet($magicArgs, self::NA_IF, '1'));
-		$ifnot = $frame->expand(self::arrayGet($magicArgs, self::NA_IFNOT, ''));
+		$if = $frame->expand($this->arrayGet($magicArgs, self::NA_IF, '1'));
+		$ifnot = $frame->expand($this->arrayGet($magicArgs, self::NA_IFNOT, ''));
 
 		return !empty($if) && empty($ifnot);
 	}
@@ -120,7 +134,7 @@ class ParserHelper
 	 *
 	 * @return array
 	 */
-	public static function expandArray(PPFrame $frame, array $values, $trim = false)
+	public function expandArray(PPFrame $frame, array $values, $trim = false)
 	{
 		$retval = [];
 
@@ -147,9 +161,9 @@ class ParserHelper
 	 * @return [type]
 	 *
 	 */
-	public static function findMagicID($value, $default = null)
+	public function findMagicID($value, $default = null)
 	{
-		$match = self::$mwArray->matchStartToEnd($value);
+		$match = $this->mwArray->matchStartToEnd($value);
 		return $match === false ? $default : $match;
 	}
 
@@ -163,7 +177,7 @@ class ParserHelper
 	 * @return string The modified text.
 	 *
 	 */
-	public static function formatPFForDebug($output, $debug = false, $noparse = false)
+	public function formatPFForDebug($output, $debug = false, $noparse = false)
 	{
 		if (strlen($output) == 0) {
 			return '';
@@ -185,42 +199,13 @@ class ParserHelper
 	 * @return string The modified text.
 	 *
 	 */
-	public static function formatTagForDebug($output, $debug = false)
+	public function formatTagForDebug($output, $debug = false)
 	{
 		// It ended up that for both the cases of this so far, we needed to process the debug value before getting
 		// here, so I made the debug check a simple boolean.
 		return $debug
 			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki']
 			: [$output, 'markerType' => 'none'];
-	}
-
-	/**
-	 * Returns a string or part node split into a key/value pair, with the key expanded, if necessary, into a string.
-	 * The return value is always an array. If the argument is of the wrong type, or isn't a key/value pair, the key
-	 * will be returned as null and the value will be the original argument.
-	 *
-	 * @param PPFrame $frame The frame in use.
-	 * @param string|PPNode_Hash_Tree $arg The argument to work on.
-	 *
-	 * @return array
-	 */
-	public static function getKeyValue(PPFrame $frame, $arg)
-	{
-		if ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
-			$split = $arg->splitArg();
-			$key = empty($split['index']) ? $frame->expand($split['name']) : null;
-			return [$key, $split['value']];
-		}
-
-		if (is_string($arg)) {
-			$split = explode('=', $arg, 2);
-			if (count($split) == 2) {
-				return [$split[0], $split[1]];
-			}
-		}
-
-		// This handles both value-only nodes and unexpected values.
-		return [null, $arg];
 	}
 
 	/**
@@ -237,7 +222,7 @@ class ParserHelper
 	 * named arguments from `$allowedArgs` that were found. The values will have been expanded before being returned.
 	 * The second array will contain all other arguments. These are left unexpanded to avoid processing conditional code.
 	 */
-	public static function getMagicArgs(PPFrame $frame, array $args = [], ...$allowedArgs)
+	public function getMagicArgs(PPFrame $frame, array $args = [], ...$allowedArgs)
 	{
 		$magic = [];
 		$values = [];
@@ -246,7 +231,7 @@ class ParserHelper
 		if (count($args) && count($allowedArgs)) {
 			$args = array_reverse($args); // Make sure last value gets processed and any others go to $dupes.
 			foreach ($args as $arg) {
-				list($name, $value) = self::getKeyValue($frame, $arg);
+				list($name, $value) = $this->getKeyValue($frame, $arg);
 				if (is_null($name)) {
 					// RHDebug::show('Add anon: ', $frame->expand($value));
 					$values[] = $value;
@@ -278,9 +263,9 @@ class ParserHelper
 		return [$magic, $values, $dupes];
 	}
 
-	public static function getSeparator(PPFrame $frame, array $magicArgs)
+	public function getSeparator(PPFrame $frame, array $magicArgs)
 	{
-		$separator = ParserHelper::arrayGet($magicArgs, self::NA_SEPARATOR, '');
+		$separator = $this->arrayGet($magicArgs, self::NA_SEPARATOR, '');
 		if (strlen($separator) > 1) {
 			$separator = stripcslashes($separator);
 			$first = $separator[0];
@@ -297,9 +282,11 @@ class ParserHelper
 	 *
 	 * @return void
 	 */
-	public static function init()
+	public function init()
 	{
-		self::cacheMagicWords([
+		require_once(__DIR__ . '/RHDebug.php');
+		// set_error_handler("ParserHelper::exception_error_handler");
+		$this->cacheMagicWords([
 			self::NA_ALLOWEMPTY,
 			self::NA_CASE,
 			self::NA_DEBUG,
@@ -312,6 +299,12 @@ class ParserHelper
 		]);
 	}
 
+	public static function exception_error_handler($errno, $errstr, $errfile, $errline)
+	{
+		throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
+	}
+
+
 	/**
 	 * Determines if the word at a specific key matches a certain value after everything's converted to their
 	 * respective IDs.
@@ -323,12 +316,12 @@ class ParserHelper
 	 * @return boolean True if the value at the specifc key was the same as the value specified.
 	 *
 	 */
-	public static function magicKeyEqualsValue($magicArguments, $key, $value)
+	public function magicKeyEqualsValue($magicArguments, $key, $value)
 	{
-		$arrayValue = self::arrayGet($magicArguments, $key);
+		$arrayValue = $this->arrayGet($magicArguments, $key);
 		return
 			!is_null($arrayValue) &&
-			self::$mwArray->matchStartToEnd($arrayValue) === $value;
+			$this->getMagicWord($value)->matchStartToEnd($arrayValue);
 	}
 
 	/**
@@ -341,26 +334,18 @@ class ParserHelper
 	 * @return void
 	 *
 	 */
-	public static function setHookSynonyms(Parser $parser, $id, callable $callback)
+	public function setHookSynonyms(Parser $parser, $id, callable $callback)
 	{
-		global $wgContLang;
-
-		$magicWord = MagicWord::get($id);
-		$case = $magicWord->isCaseSensitive();
-		foreach ($magicWord->getSynonyms() as $synonym) {
-			if (!$case) {
-				$synonym = $wgContLang->lc($synonym);
-			}
-
+		foreach ($this->getMagicWord($id)->getSynonyms() as $synonym) {
 			$parser->setHook($synonym, $callback);
 		}
 	}
 
-	public static function transformArgs(array $args)
+	public function transformArgs(array $args)
 	{
 		$retval = [];
 		foreach ($args as $key => $value) {
-			$match = self::$mwArray->matchStartToEnd($key);
+			$match = $this->mwArray->matchStartToEnd($key);
 			if ($match) {
 				$retval[$match] = $value;
 			}
@@ -368,4 +353,39 @@ class ParserHelper
 
 		return $retval;
 	}
+
+	/**
+	 * Gets a value from an array with proper existence checks beforehand.
+	 * This can be replaced with `$array[$key] ?? $default` if upgraded to PHP 7.
+	 *
+	 * @param array $array The array to search.
+	 * @param mixed $key The key of the value to retrieve.
+	 * @param null $default A value to use if the key is not found in the array.
+	 * If not provided, `null` will be returned.
+	 *
+	 * @return mixed The requested value, or `$default|null` if not found.
+	 */
+	public abstract function arrayGet(array $array, $key, $default = null);
+
+	/**
+	 * Returns a string or part node split into a key/value pair, with the key expanded, if necessary, into a string.
+	 * The return value is always an array. If the argument is of the wrong type, or isn't a key/value pair, the key
+	 * will be returned as null and the value will be the original argument.
+	 *
+	 * @param PPFrame $frame The frame in use.
+	 * @param string|PPNode_Hash_Tree $arg The argument to work on.
+	 *
+	 * @return array
+	 */
+	public abstract function getKeyValue(PPFrame $frame, $arg);
+
+	/**
+	 * Gets the magic word for the specified id.
+	 *
+	 * @param mixed $id The id of the magic word to get.
+	 *
+	 * @return MagicWord The magic word or null if not found.
+	 *
+	 */
+	public abstract function getMagicWord($id);
 }
