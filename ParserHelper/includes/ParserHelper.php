@@ -183,11 +183,9 @@ abstract class ParserHelper
 			return '';
 		}
 
-		if ($debug) {
-			return ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false];
-		}
-
-		return 		[$output, 'noparse' => $noparse];
+		return $debug
+			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false]
+			: [$output, 'noparse' => $noparse];
 	}
 
 	/**
@@ -199,13 +197,13 @@ abstract class ParserHelper
 	 * @return string The modified text.
 	 *
 	 */
-	public function formatTagForDebug($output, $debug = false)
+	public function formatTagForDebug($output, $debug = false, $noparse = false)
 	{
 		// It ended up that for both the cases of this so far, we needed to process the debug value before getting
 		// here, so I made the debug check a simple boolean.
 		return $debug
-			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki']
-			: [$output, 'markerType' => 'none'];
+			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki', 'noparse' => $noparse]
+			: [$output, 'markerType' => 'none', 'noparse' => $noparse];
 	}
 
 	/**
