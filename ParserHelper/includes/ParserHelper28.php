@@ -41,7 +41,7 @@ class ParserHelper28 extends ParserHelper
         return $parser->mStripState;
     }
 
-    public function replaceLinkHoldersText($parser, $output)
+    public function replaceLinkHoldersText(Parser $parser, $output)
     {
         return $parser->replaceLinkHoldersText($output);
     }
