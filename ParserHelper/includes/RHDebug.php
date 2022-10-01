@@ -1,5 +1,9 @@
 <?php
 
+use Wikimedia\Rdbms\Database;
+use Wikimedia\Rdbms\IDatabase;
+use Wikimedia\Rdbms\ResultWrapper;
+
 /**
  * Tries to send a popup message via Javascript.
  *
@@ -31,7 +35,25 @@ function RHformatQuery(IDatabase $db, ResultWrapper $result = null)
         return;
     }
 
-    // MW 1.28+: $db = $result->getDB();
+    $retval = $result ? $db->numRows($result) . ' rows returned.' : '';
+    return $db->lastQuery() . "\n\n" . $retval;
+}
+
+/**
+ * Returns the last query run along with the number of rows affected, if any.
+ *
+ * @param IDatabase $db
+ * @param ResultWrapper|null $result
+ *
+ * @return string The text of the query and the result count.
+ *
+ */
+function RHformatQueryDbb(Database $db, ResultWrapper $result = null)
+{
+    if (!RHisDev()) {
+        return;
+    }
+
     $retval = $result ? $db->numRows($result) . ' rows returned.' : '';
     return $db->lastQuery() . "\n\n" . $retval;
 }
@@ -76,7 +98,10 @@ function RHshow(...$msgs)
     echo '<pre>';
     foreach ($msgs as $msg) {
         if ($msg) {
-            print_r(htmlspecialchars(print_r($msg, true)));
+            // Function are separate for possible behaviour flags later on.
+            $msg = print_r($msg, true);
+            $msg = htmlspecialchars($msg);
+            print_r($msg);
         }
     }
 
