@@ -15,9 +15,6 @@ abstract class ParserHelper
 	const NA_IFNOT = 'parserhelper-ifnot';
 	const NA_SEPARATOR = 'parserhelper-separator';
 
-	const NA_NSBASE = 'parserhelper-ns_base';
-	const NA_NSID = 'parserhelper-ns_id';
-
 	/**
 	 * Instance variable for singleton.
 	 *
@@ -291,9 +288,6 @@ abstract class ParserHelper
 			self::NA_IF,
 			self::NA_IFNOT,
 			self::NA_SEPARATOR,
-
-			self::NA_NSBASE, // These are shared here for now. There may be a better way to integrate
-			self::NA_NSID,   // them later as Riven, MetaTemplate and UespCustomCode develop.
 		]);
 	}
 
