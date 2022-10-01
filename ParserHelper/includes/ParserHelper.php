@@ -118,7 +118,7 @@ abstract class ParserHelper
 		$if = $frame->expand($this->arrayGet($magicArgs, self::NA_IF, '1'));
 		$ifnot = $frame->expand($this->arrayGet($magicArgs, self::NA_IFNOT, ''));
 
-		return !empty($if) && empty($ifnot);
+		return $if && !$ifnot;
 	}
 
 	/**
@@ -127,15 +127,12 @@ abstract class ParserHelper
 	 *
 	 * @param PPFrame $frame The expansion frame to use.
 	 * @param array $values The values to expand.
-	 * @param int $flags
-	 *
+	 * @param bool $trim Whether the results should be trimmed prior to being returned.
 	 * @return array
 	 */
 	public function expandArray(PPFrame $frame, array $values, $trim = false)
 	{
 		$retval = [];
-
-		// Micro-optimization: only check outside loop, not inside.
 		if ($trim) {
 			foreach ($values as $value) {
 				$retval[] = trim($frame->expand($value));
