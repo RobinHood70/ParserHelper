@@ -277,7 +277,6 @@ abstract class ParserHelper
 	public function init()
 	{
 		require_once(__DIR__ . '/RHDebug.php');
-		// set_error_handler("ParserHelper::exception_error_handler");
 		$this->cacheMagicWords([
 			self::NA_ALLOWEMPTY,
 			self::NA_CASE,
@@ -287,12 +286,6 @@ abstract class ParserHelper
 			self::NA_SEPARATOR,
 		]);
 	}
-
-	public static function exception_error_handler($errno, $errstr, $errfile, $errline)
-	{
-		throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
-	}
-
 
 	/**
 	 * Determines if the word at a specific key matches a certain value after everything's converted to their
