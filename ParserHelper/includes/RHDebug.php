@@ -11,7 +11,7 @@ use Wikimedia\Rdbms\ResultWrapper;
  *
  * @return void
  */
-function RHalert($msg)
+function RHalert($msg): void
 {
     if (!RHisDev()) {
         return;
@@ -26,13 +26,13 @@ function RHalert($msg)
  * @param IDatabase $db
  * @param ResultWrapper|null $result
  *
- * @return string The text of the query and the result count.
+ * @return string The text of the query and the result count or an empty string.
  *
  */
-function RHformatQuery(IDatabase $db, ResultWrapper $result = null)
+function RHformatQuery(IDatabase $db, ResultWrapper $result = null): string
 {
     if (!RHisDev()) {
-        return;
+        return '';
     }
 
     $retval = $result ? $db->numRows($result) . ' rows returned.' : '';
@@ -45,13 +45,13 @@ function RHformatQuery(IDatabase $db, ResultWrapper $result = null)
  * @param IDatabase $db
  * @param ResultWrapper|null $result
  *
- * @return string The text of the query and the result count.
+ * @return string The text of the query and the result count or an empty string.
  *
  */
-function RHformatQueryDbb(Database $db, ResultWrapper $result = null)
+function RHformatQueryDbb(Database $db, ResultWrapper $result = null): string
 {
     if (!RHisDev()) {
-        return;
+        return '';
     }
 
     $retval = $result ? $db->numRows($result) . ' rows returned.' : '';
@@ -59,14 +59,14 @@ function RHformatQueryDbb(Database $db, ResultWrapper $result = null)
 }
 
 /**
- * Logs text to the file provided in the PH_LOG_FILE define.
+ * Logs text to the file provided in the PH_LOG_FILE define, along with the class and function it's executing from.
  *
  * @param string $text The text to add to the log.
  *
  * @return void
  *
  */
-function RHlogFunctionText($text = '')
+function RHlogFunctionText($text = ''): void
 {
     if (!RHisDev()) {
         return;
@@ -89,7 +89,7 @@ function RHlogFunctionText($text = '')
  * @return void
  *
  */
-function RHshow(...$msgs)
+function RHshow(mixed ...$msgs): void
 {
     if (!RHisDev()) {
         return;
@@ -99,6 +99,8 @@ function RHshow(...$msgs)
     foreach ($msgs as $msg) {
         if ($msg) {
             // Function are separate for possible behaviour flags later on.
+            // The double print_r is necessary here. The first converts it to something we can capture and run
+            // htmlspecialchars on. The second one actually prints it.
             $msg = print_r($msg, true);
             $msg = htmlspecialchars($msg);
             print_r($msg);
@@ -116,7 +118,7 @@ function RHshow(...$msgs)
  * @return void
  *
  */
-function RHwriteFile(...$msgs)
+function RHwriteFile(mixed ...$msgs): void
 {
     RHwriteAnyFile(RHDebug::$phLogFile, ...$msgs);
 }
@@ -124,13 +126,13 @@ function RHwriteFile(...$msgs)
 /**
  * Logs the provided text to the specified file.
  *
- * @param mixed $file The file to output to.
+ * @param string $file The file to output to.
  * @param mixed ...$msgs What to log.
  *
  * @return void
  *
  */
-function RHwriteAnyFile($file, ...$msgs)
+function RHwriteAnyFile(string $file, mixed ...$msgs): void
 {
     if (!RHisDev()) {
         return;
@@ -147,7 +149,13 @@ function RHwriteAnyFile($file, ...$msgs)
     fclose($handle);
 }
 
-function RHisDev()
+/**
+ * Indicates if running on a development server.
+ *
+ * @return bool
+ *
+ */
+function RHisDev(): bool
 {
     return in_array($_SERVER['SERVER_NAME'], ['content3.uesp.net', 'dev.uesp.net', 'rob-centos']);
 }

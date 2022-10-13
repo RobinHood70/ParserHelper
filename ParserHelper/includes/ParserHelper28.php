@@ -5,14 +5,7 @@
  */
 class ParserHelper28 extends ParserHelper
 {
-    public function arrayGet(array $array, $key, $default = null)
-    {
-        return (isset($array[$key]) || array_key_exists($key, $array))
-            ? $array[$key]
-            : $default;
-    }
-
-    public function getKeyValue(PPFrame $frame, $arg)
+    public function getKeyValue(PPFrame $frame, mixed $arg): array
     {
         if ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
             $split = $arg->splitArg();
@@ -31,17 +24,17 @@ class ParserHelper28 extends ParserHelper
         return [null, $arg];
     }
 
-    public function getMagicWord($id)
+    public function getMagicWord(string $id): MagicWord
     {
         return MagicWord::get($id);
     }
 
-    public function getStripState(Parser $parser)
+    public function getStripState(Parser $parser): StripState
     {
         return $parser->mStripState;
     }
 
-    public function replaceLinkHoldersText(Parser $parser, $output)
+    public function replaceLinkHoldersText(Parser $parser, string $output): string
     {
         return $parser->replaceLinkHoldersText($output);
     }

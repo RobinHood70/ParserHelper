@@ -7,12 +7,7 @@ use MediaWiki\MediaWikiServices;
  */
 class ParserHelper35 extends ParserHelper
 {
-    public function arrayGet(array $array, $key, $default = null)
-    {
-        return $array[$key] ?? $default;
-    }
-
-    public function getKeyValue(PPFrame $frame, $arg)
+    public function getKeyValue(PPFrame $frame, $arg): array
     {
         if ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
             $split = $arg->splitArg();
@@ -31,17 +26,17 @@ class ParserHelper35 extends ParserHelper
         return [null, $arg];
     }
 
-    public function getMagicWord($id)
+    public function getMagicWord($id): MagicWord
     {
         return MediaWikiServices::getInstance()->getMagicWordFactory()->get($id);
     }
 
-    public function getStripState(Parser $parser)
+    public function getStripState(Parser $parser): StripState
     {
         return $parser->getStripState();
     }
 
-    public function replaceLinkHoldersText(Parser $parser, $output)
+    public function replaceLinkHoldersText(Parser $parser, string $output): string
     {
         // Make $parser->replaceLinkHoldersText() available via reflection. This is blatantly "a bad thing", but as of
         // MW 1.35, it's the only way to implement the functionality which was previously public. Failing this, it's

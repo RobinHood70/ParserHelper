@@ -19,6 +19,12 @@ abstract class ParserHelper
 	 * Instance variable for singleton.
 	 *
 	 * @var ParserHelper
+	 *
+	 * 	/**
+	 * Cache for localized magic words.
+	 *
+	 * @var MagicWordArray
+	 *
 	 */
 	private static $instance;
 
@@ -26,6 +32,7 @@ abstract class ParserHelper
 	 * Cache for localized magic words.
 	 *
 	 * @var MagicWordArray
+	 *
 	 */
 	private $mwArray;
 
@@ -35,7 +42,7 @@ abstract class ParserHelper
 	 * @return ParserHelper
 	 *
 	 */
-	public static function getInstance()
+	public static function getInstance(): ParserHelper
 	{
 		if (!self::$instance) {
 			$useNew = defined('MW_VERSION') && version_compare(constant('MW_VERSION'), '1.35', '>=');
@@ -61,8 +68,9 @@ abstract class ParserHelper
 	 * @param array $magicWords The magic words to cache.
 	 *
 	 * @return void
+	 *
 	 */
-	public function cacheMagicWords(array $magicWords)
+	public function cacheMagicWords(array $magicWords): void
 	{
 		// TODO: Move most of the calls to this to something more appropriate. Magic Words should be unique and not
 		// appropriated for values. This should be straight-up localization and nothing more. Check how image options
@@ -82,7 +90,7 @@ abstract class ParserHelper
 	 *
 	 * @return boolean True if `case=any` or any localized equivalent was found in the argument list.
 	 */
-	public function checkAnyCase(array $magicArgs)
+	public function checkAnyCase(array $magicArgs): bool
 	{
 		return $this->magicKeyEqualsValue($magicArgs, self::NA_CASE, self::AV_ANY);
 	}
@@ -97,9 +105,9 @@ abstract class ParserHelper
 	 * @return boolean
 	 *
 	 */
-	public function checkDebugMagic(Parser $parser, PPFrame $frame, array $magicArgs)
+	public function checkDebugMagic(Parser $parser, PPFrame $frame, array $magicArgs): bool
 	{
-		$debug = $frame->expand($this->arrayGet($magicArgs, self::NA_DEBUG, false));
+		$debug = $frame->expand($magicArgs[self::NA_DEBUG] ?? false);
 		// RHshow('Debug param: ', boolval($debug) ? 'Yes' : 'No', "\nIs preview: ", $parser->getOptions()->getIsPreview(), "\nDebug word: ", $this->getMagicWord(self::AV_ALWAYS)->matchStartToEnd($debug));
 		return $parser->getOptions()->getIsPreview()
 			? boolval($debug)
@@ -113,12 +121,11 @@ abstract class ParserHelper
 	 *
 	 * @return boolean True if both conditions (if applicable) have been satisfied; otherwise, false.
 	 */
-	public function checkIfs(PPFrame $frame, array $magicArgs)
+	public function checkIfs(PPFrame $frame, array $magicArgs): bool
 	{
-		$if = $frame->expand($this->arrayGet($magicArgs, self::NA_IF, '1'));
-		$ifnot = $frame->expand($this->arrayGet($magicArgs, self::NA_IFNOT, ''));
-
-		return $if && !$ifnot;
+		return
+			$frame->expand($magicArgs[self::NA_IF] ?? true) &&
+			$frame->expand($magicArgs[self::NA_IFNOT] ?? false);
 	}
 
 	/**
@@ -130,7 +137,7 @@ abstract class ParserHelper
 	 * @param bool $trim Whether the results should be trimmed prior to being returned.
 	 * @return array
 	 */
-	public function expandArray(PPFrame $frame, array $values, $trim = false)
+	public function expandArray(PPFrame $frame, array $values, bool $trim = false): array
 	{
 		$retval = [];
 		if ($trim) {
@@ -150,12 +157,12 @@ abstract class ParserHelper
 	 * Finds the magic word ID that corresponds to the value provided.
 	 *
 	 * @param string $value The value to look up.
-	 * @param null $default The value to use if $value is not found.
+	 * @param ?string $default The value to use if $value is not found.
 	 *
 	 * @return [type]
 	 *
 	 */
-	public function findMagicID($value, $default = null)
+	public function findMagicID($value, ?string $default = null): ?string
 	{
 		$match = $this->mwArray->matchStartToEnd($value);
 		return $match === false ? $default : $match;
@@ -168,10 +175,10 @@ abstract class ParserHelper
 	 * @param bool $debug Whether to return debug or regular text.
 	 * @param bool $noparse If this falls through to regular output, whether or not to parse that output.
 	 *
-	 * @return string The modified text.
+	 * @return array The modified text.
 	 *
 	 */
-	public function formatPFForDebug($output, $debug = false, $noparse = false)
+	public function formatPFForDebug(string $output, bool $debug = false, bool $noparse = false): array
 	{
 		if (strlen($output) == 0) {
 			return '';
@@ -186,12 +193,13 @@ abstract class ParserHelper
 	 * Standardizes debug text formatting for tags.
 	 *
 	 * @param string $output The original text being output.
-	 * @param boolean $debug Whether to format as debug text or as normal.
+	 * @param bool $debug Whether to return debug or regular text.
+	 * @param bool $noparse If this falls through to regular output, whether or not to parse that output.
 	 *
 	 * @return string The modified text.
 	 *
 	 */
-	public function formatTagForDebug($output, $debug = false, $noparse = false)
+	public function formatTagForDebug(string $output, bool $debug = false, bool $noparse = false): array
 	{
 		// It ended up that for both the cases of this so far, we needed to process the debug value before getting
 		// here, so I made the debug check a simple boolean.
@@ -214,7 +222,7 @@ abstract class ParserHelper
 	 * named arguments from `$allowedArgs` that were found. The values will have been expanded before being returned.
 	 * The second array will contain all other arguments. These are left unexpanded to avoid processing conditional code.
 	 */
-	public function getMagicArgs(PPFrame $frame, array $args = [], ...$allowedArgs)
+	public function getMagicArgs(PPFrame $frame, array $args = [], string ...$allowedArgs): array
 	{
 		$magic = [];
 		$values = [];
@@ -255,9 +263,17 @@ abstract class ParserHelper
 		return [$magic, $values, $dupes];
 	}
 
-	public function getSeparator(PPFrame $frame, array $magicArgs)
+	/**
+	 * Parse separator string for C-like character entities and surrounding quotes.
+	 *
+	 * @param array $magicArgs
+	 *
+	 * @return string The parsed string.
+	 *
+	 */
+	public function getSeparator(array $magicArgs): string
 	{
-		$separator = $this->arrayGet($magicArgs, self::NA_SEPARATOR, '');
+		$separator = $magicArgs[self::NA_SEPARATOR] ?? '';
 		if (strlen($separator) > 1) {
 			$separator = stripcslashes($separator);
 			$first = $separator[0];
@@ -274,7 +290,7 @@ abstract class ParserHelper
 	 *
 	 * @return void
 	 */
-	public function init()
+	public function init(): void
 	{
 		require_once(__DIR__ . '/RHDebug.php');
 		$this->cacheMagicWords([
@@ -291,16 +307,16 @@ abstract class ParserHelper
 	 * Determines if the word at a specific key matches a certain value after everything's converted to their
 	 * respective IDs.
 	 *
-	 * @param mixed $magicArguments The arguments they key can be found in.
-	 * @param mixed $key The key to search for.
-	 * @param mixed $value The value to match with.
+	 * @param array $magicArguments The arguments the key can be found in.
+	 * @param string $key The key to search for.
+	 * @param string $value The value to match with.
 	 *
-	 * @return boolean True if the value at the specifc key was the same as the value specified.
+	 * @return bool True if the value at the specifc key was the same as the value specified.
 	 *
 	 */
-	public function magicKeyEqualsValue($magicArguments, $key, $value)
+	public function magicKeyEqualsValue(array $magicArguments, string $key, string $value): bool
 	{
-		$arrayValue = $this->arrayGet($magicArguments, $key);
+		$arrayValue = $magicArguments[$key];
 		return
 			!is_null($arrayValue) &&
 			$this->getMagicWord($value)->matchStartToEnd($arrayValue);
@@ -310,20 +326,29 @@ abstract class ParserHelper
 	 * Calls setHook() for all synonyms of a tag.
 	 *
 	 * @param Parser $parser The parser to register the tag names with.
-	 * @param mixed $id The magic word ID whose synonyms should be registered.
+	 * @param string $id The magic word ID whose synonyms should be registered.
 	 * @param callable $callback The function to call when the tag is used.
 	 *
 	 * @return void
 	 *
 	 */
-	public function setHookSynonyms(Parser $parser, $id, callable $callback)
+	public function setHookSynonyms(Parser $parser, string $id, callable $callback)
 	{
 		foreach ($this->getMagicWord($id)->getSynonyms() as $synonym) {
 			$parser->setHook($synonym, $callback);
 		}
 	}
 
-	public function transformArgs(array $args)
+	/**
+	 * Transforms tag arguments so that only wanted elements are present and are represented by their qqq key rather
+	 * than the language-specific word.
+	 *
+	 * @param array $args The arguments to filter.
+	 *
+	 * @return array The filtered array.
+	 *
+	 */
+	public function transformArgs(array $args): array
 	{
 		$retval = [];
 		foreach ($args as $key => $value) {
@@ -337,19 +362,6 @@ abstract class ParserHelper
 	}
 
 	/**
-	 * Gets a value from an array with proper existence checks beforehand.
-	 * This can be replaced with `$array[$key] ?? $default` if upgraded to PHP 7.
-	 *
-	 * @param array $array The array to search.
-	 * @param mixed $key The key of the value to retrieve.
-	 * @param null $default A value to use if the key is not found in the array.
-	 * If not provided, `null` will be returned.
-	 *
-	 * @return mixed The requested value, or `$default|null` if not found.
-	 */
-	public abstract function arrayGet(array $array, $key, $default = null);
-
-	/**
 	 * Returns a string or part node split into a key/value pair, with the key expanded, if necessary, into a string.
 	 * The return value is always an array. If the argument is of the wrong type, or isn't a key/value pair, the key
 	 * will be returned as null and the value will be the original argument.
@@ -359,17 +371,17 @@ abstract class ParserHelper
 	 *
 	 * @return array
 	 */
-	public abstract function getKeyValue(PPFrame $frame, $arg);
+	public abstract function getKeyValue(PPFrame $frame, mixed $arg): mixed;
 
 	/**
 	 * Gets the magic word for the specified id.
 	 *
-	 * @param mixed $id The id of the magic word to get.
+	 * @param string $id The id of the magic word to get.
 	 *
 	 * @return MagicWord The magic word or null if not found.
 	 *
 	 */
-	public abstract function getMagicWord($id);
+	public abstract function getMagicWord(string $id): MagicWord;
 
 	/**
 	 * Retrieves the parser's strip state object.
@@ -379,7 +391,7 @@ abstract class ParserHelper
 	 * @return StripState
 	 *
 	 */
-	public abstract function getStripState(Parser $parser);
+	public abstract function getStripState(Parser $parser): StripState;
 
 	/**
 	 * Calls $parser->replaceLinkHoldersText(), bypassing the private access modifier if needed.
@@ -390,5 +402,5 @@ abstract class ParserHelper
 	 * @return stroing
 	 *
 	 */
-	public abstract function replaceLinkHoldersText(Parser $parser, $output);
+	public abstract function replaceLinkHoldersText(Parser $parser, string $output): string;
 }
