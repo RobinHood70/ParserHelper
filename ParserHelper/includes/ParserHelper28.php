@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Provides a number of library routines, mostly related to the parser along with a few generic global methods.
+ * See base class for documentation.
  */
 class ParserHelper28 extends ParserHelper
 {

@@ -218,48 +218,58 @@ abstract class ParserHelper
 	 * @param mixed ...$allowedArgs A list of arguments that should be expanded and returned in the `$magic` portion of
 	 * the returned array. All other arguments will be returned in the `$values` portion of the returned array.
 	 *
-	 * @return [array, array] The return value consists of two sets of array. The first array contains the list of any
-	 * named arguments from `$allowedArgs` that were found. The values will have been expanded before being returned.
-	 * The second array will contain all other arguments. These are left unexpanded to avoid processing conditional code.
+	 * @return array The return value consists of three arrays:
+	 * - The first array contains the list of any named arguments from $args where the key appears in $allowedArgs. All
+	 *   keys and values in this array will have been expanded before being returned.
+	 * - The second array will contain any arguments that are anonymous or were not specified in $allowedArgs.
+	 * - The final array will contain any duplicate keys from $allowedArgs. This allows custom handling of duplicates,
+	 *   such as is needed by #splitargs in Riven.
+	 *
 	 */
 	public function getMagicArgs(PPFrame $frame, array $args = [], string ...$allowedArgs): array
 	{
+		if (!count($args) || !count($allowedArgs)) {
+			return [[], $args, []];
+		}
+
 		$magic = [];
 		$values = [];
 		$dupes = [];
 		$allowedArray = new MagicWordArray($allowedArgs);
-		if (count($args) && count($allowedArgs)) {
-			$args = array_reverse($args); // Make sure last value gets processed and any others go to $dupes.
-			foreach ($args as $arg) {
-				list($name, $value) = $this->getKeyValue($frame, $arg);
-				if (is_null($name)) {
-					// RHDebug::show('Add anon: ', $frame->expand($value));
-					$values[] = $value;
-				} else {
-					$name = trim($name);
-					$magKey = $allowedArray->matchStartToEnd($name);
-					if ($magKey) {
-						if (isset($magic[$magKey])) {
-							// If a key already exists and is one of the allowed keys, add it to the dupes list. This
-							// allows for the possibility of merging the duplicate back into values later on for cases
-							// like #splitargs where it may be desirable to have keys for the called template
-							// (e.g., separator) that overlap with those of the template.
-							if (!isset($dupes[$name])) {
-								$dupes[$name] = $value;
-							}
-						} else {
-							$magic[$magKey] = trim($frame->expand($value));
+
+		// TODO: Should be doable in a forwards direction, with duplicates only added if a key already exists.
+		// However, this changes a guaranteed array_reverse (and possible a second at the end) for having to check
+		// isset() for every parameter. Might want to time this and see which performs better.
+		$args = array_reverse($args); // Make sure last value gets processed and any others go to $dupes.
+		foreach ($args as $arg) {
+			list($name, $value) = $this->getKeyValue($frame, $arg);
+			if (is_null($name)) {
+				// RHDebug::show('Add anon: ', $frame->expand($value));
+				$values[] = $value;
+			} else {
+				$name = trim($name);
+				$magKey = $allowedArray->matchStartToEnd($name);
+				if ($magKey) {
+					if (isset($magic[$magKey])) {
+						// If a key already exists and is one of the allowed keys, add it to the dupes list. This
+						// allows for the possibility of merging the duplicates back into values later on for cases
+						// like #splitargs where it may be desirable to have keys for the called template
+						// (e.g., separator) that overlap with those of the template.
+						if (!isset($dupes[$name])) {
+							// TODO: change this to `$dupes[$name][] = $value` to allow for multiple duplicates.
+							$dupes[$name] = $value;
 						}
 					} else {
-						// RHDebug::show('Add fake k=v: ', $frame->expand($arg));
-						$values[] = $arg;
+						$magic[$magKey] = trim($frame->expand($value));
 					}
+				} else {
+					// RHDebug::show('Add fake k=v: ', $frame->expand($arg));
+					$values[] = $arg;
 				}
 			}
-
-			$values = array_reverse($values);
 		}
 
+		$values = array_reverse($values);
 		return [$magic, $values, $dupes];
 	}
 
