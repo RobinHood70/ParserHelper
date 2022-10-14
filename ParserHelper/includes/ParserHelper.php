@@ -371,7 +371,7 @@ abstract class ParserHelper
 	 *
 	 * @return array
 	 */
-	public abstract function getKeyValue(PPFrame $frame, mixed $arg): mixed;
+	public abstract function getKeyValue(PPFrame $frame, mixed $arg): array;
 
 	/**
 	 * Gets the magic word for the specified id.
