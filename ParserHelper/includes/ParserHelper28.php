@@ -5,7 +5,7 @@
  */
 class ParserHelper28 extends ParserHelper
 {
-    public function getKeyValue(PPFrame $frame, mixed $arg): array
+    public function getKeyValue(PPFrame $frame, $arg): array
     {
         if ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
             $split = $arg->splitArg();

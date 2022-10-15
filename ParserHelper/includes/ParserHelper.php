@@ -19,12 +19,6 @@ abstract class ParserHelper
 	 * Instance variable for singleton.
 	 *
 	 * @var ParserHelper
-	 *
-	 * 	/**
-	 * Cache for localized magic words.
-	 *
-	 * @var MagicWordArray
-	 *
 	 */
 	private static $instance;
 
@@ -32,14 +26,13 @@ abstract class ParserHelper
 	 * Cache for localized magic words.
 	 *
 	 * @var MagicWordArray
-	 *
 	 */
 	private $mwArray;
 
 	/**
-	 * Singleton instance.
+	 * Gets the singleton instance for this class.
 	 *
-	 * @return ParserHelper
+	 * @return ParserHelper The singleton instance.
 	 *
 	 */
 	public static function getInstance(): ParserHelper
@@ -75,20 +68,19 @@ abstract class ParserHelper
 		// TODO: Move most of the calls to this to something more appropriate. Magic Words should be unique and not
 		// appropriated for values. This should be straight-up localization and nothing more. Check how image options
 		// work, as these are likely to be similar.
-		if (!isset($this->mwArray)) {
-			// RHshow($magicWords);
-			$this->mwArray = new MagicWordArray($magicWords);
-		} else {
+		if (isset($this->mwArray)) {
 			$this->mwArray->addArray($magicWords);
+		} else {
+			$this->mwArray = new MagicWordArray($magicWords);
 		}
 	}
 
 	/**
 	 * Checks the `case` parameter to see if matches `case=any` or any of the localized equivalents.
 	 *
-	 * @param array $magicArgs The list of arguments to search.
+	 * @param array $magicArgs The magic-word arguments as created by getMagicArgs().
 	 *
-	 * @return boolean True if `case=any` or any localized equivalent was found in the argument list.
+	 * @return bool True if `case=any` or any localized equivalent was found in the argument list.
 	 */
 	public function checkAnyCase(array $magicArgs): bool
 	{
@@ -96,13 +88,14 @@ abstract class ParserHelper
 	}
 
 	/**
-	 * Checks the debug argument to see if it's boolean or 'always'. This variant of checkDebug expects the keys to be
-	 * magic word values rather than magic word IDs.
+	 * Checks the debug argument to see if it's boolean or 'always'.Expects the keys to be magic word values rather
+	 * than magic word IDs.
 	 *
 	 * @param Parser $parser The parser in use.
-	 * @param array|null $magicArgs The magic word arguments as created by getMagicArgs().
+	 * @param PPFrame $frame The frame in use.
+	 * @param array $magicArgs The magic-word arguments as created by getMagicArgs().
 	 *
-	 * @return boolean
+	 * @return bool
 	 *
 	 */
 	public function checkDebugMagic(Parser $parser, PPFrame $frame, array $magicArgs): bool
@@ -117,9 +110,11 @@ abstract class ParserHelper
 	/**
 	 * Checks whether both the `if=` and `ifnot=` conditions have been satisfied.
 	 *
-	 * @param array $magicArgs The magic word array containing the arguments.
+	 * @param PPFrame $frame The frame in use.
+	 * @param array $magicArgs The magic-word arguments as created by getMagicArgs().
 	 *
-	 * @return boolean True if both conditions (if applicable) have been satisfied; otherwise, false.
+	 * @return bool True if both conditions (if applicable) have been satisfied; otherwise, false.
+	 *
 	 */
 	public function checkIfs(PPFrame $frame, array $magicArgs): bool
 	{
@@ -129,16 +124,19 @@ abstract class ParserHelper
 	}
 
 	/**
-	 * Expands an entire array of values using the MediaWiki pre-processor.
-	 * This is useful when parsing arguments to parser functions.
+	 * Expands an entire array of values using the expansion frame provided. This is sometimes useful when parsing
+	 * arguments to parser functions.
 	 *
-	 * @param PPFrame $frame The expansion frame to use.
+	 * @param PPFrame $frame The frame in use.
 	 * @param array $values The values to expand.
 	 * @param bool $trim Whether the results should be trimmed prior to being returned.
-	 * @return array
+	 *
+	 * @return array The expanded array.
+	 *
 	 */
 	public function expandArray(PPFrame $frame, array $values, bool $trim = false): array
 	{
+		// TODO: This is only used in one place and can probably be optimized within that context.
 		$retval = [];
 		if ($trim) {
 			foreach ($values as $value) {
@@ -162,7 +160,7 @@ abstract class ParserHelper
 	 * @return [type]
 	 *
 	 */
-	public function findMagicID($value, ?string $default = null): ?string
+	public function findMagicID(string $value, ?string $default = null): ?string
 	{
 		$match = $this->mwArray->matchStartToEnd($value);
 		return $match === false ? $default : $match;
@@ -178,15 +176,11 @@ abstract class ParserHelper
 	 * @return array The modified text.
 	 *
 	 */
-	public function formatPFForDebug(string $output, bool $debug = false, bool $noparse = false): array
+	public function formatPFForDebug(string $output, bool $debug = false): array
 	{
-		if (strlen($output) == 0) {
-			return '';
-		}
-
-		return $debug
+		return $debug && strlen($output)
 			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false]
-			: [$output, 'noparse' => $noparse];
+			: $output;
 	}
 
 	/**
@@ -201,8 +195,6 @@ abstract class ParserHelper
 	 */
 	public function formatTagForDebug(string $output, bool $debug = false, bool $noparse = false): array
 	{
-		// It ended up that for both the cases of this so far, we needed to process the debug value before getting
-		// here, so I made the debug check a simple boolean.
 		return $debug
 			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki', 'noparse' => $noparse]
 			: [$output, 'markerType' => 'none', 'noparse' => $noparse];
@@ -213,23 +205,23 @@ abstract class ParserHelper
 	 * with their values. The function checks all localized variants for a named argument and returns their associated
 	 * values under a single unified key.
 	 *
-	 * @param PPFrame $frame The expansion frame to use.
+	 * @param PPFrame $frame The frame in use.
 	 * @param array $args The arguments to search.
 	 * @param mixed ...$allowedArgs A list of arguments that should be expanded and returned in the `$magic` portion of
 	 * the returned array. All other arguments will be returned in the `$values` portion of the returned array.
 	 *
-	 * @return array The return value consists of three arrays:
-	 * - The first array contains the list of any named arguments from $args where the key appears in $allowedArgs. All
-	 *   keys and values in this array will have been expanded before being returned.
+	 * @return array The return value consists of three arrays, all of which will have had their keys expanded:
+	 * - The first array contains the list of any named arguments from $args where the key appears in $allowedArgs.
+	 *   Values are also expanded for this array.
 	 * - The second array will contain any arguments that are anonymous or were not specified in $allowedArgs.
-	 * - The final array will contain any duplicate keys from $allowedArgs. This allows custom handling of duplicates,
-	 *   such as is needed by #splitargs in Riven.
+	 * - The final array will contain any key-value pairs where the key was in $allowedArgs but appeared more than
+	 *   once. This allows custom handling of duplicates, as is done by #splitargs in Riven, for example.
 	 *
 	 */
 	public function getMagicArgs(PPFrame $frame, array $args = [], string ...$allowedArgs): array
 	{
-		if (!count($args) || !count($allowedArgs)) {
-			return [[], $args, []];
+		if (!count($args)) {
+			return [[], [], []];
 		}
 
 		$magic = [];
@@ -244,7 +236,7 @@ abstract class ParserHelper
 		foreach ($args as $arg) {
 			list($name, $value) = $this->getKeyValue($frame, $arg);
 			if (is_null($name)) {
-				// RHDebug::show('Add anon: ', $frame->expand($value));
+				// RHshow('Add anon: ', $frame->expand($value));
 				$values[] = $value;
 			} else {
 				$name = trim($name);
@@ -276,7 +268,7 @@ abstract class ParserHelper
 	/**
 	 * Parse separator string for C-like character entities and surrounding quotes.
 	 *
-	 * @param array $magicArgs
+	 * @param array $magicArgs The magic-word arguments as created by getMagicArgs().
 	 *
 	 * @return string The parsed string.
 	 *
@@ -381,7 +373,7 @@ abstract class ParserHelper
 	 *
 	 * @return array
 	 */
-	public abstract function getKeyValue(PPFrame $frame, mixed $arg): array;
+	public abstract function getKeyValue(PPFrame $frame, $arg): array;
 
 	/**
 	 * Gets the magic word for the specified id.
@@ -396,7 +388,7 @@ abstract class ParserHelper
 	/**
 	 * Retrieves the parser's strip state object.
 	 *
-	 * @param Parser $parser THe parser in use.
+	 * @param Parser $parser The parser in use.
 	 *
 	 * @return StripState
 	 *
@@ -406,7 +398,7 @@ abstract class ParserHelper
 	/**
 	 * Calls $parser->replaceLinkHoldersText(), bypassing the private access modifier if needed.
 	 *
-	 * @param Parser $parser The parser in use;
+	 * @param Parser $parser The parser in use.
 	 * @param mixed $output The output text to replace in.
 	 *
 	 * @return stroing

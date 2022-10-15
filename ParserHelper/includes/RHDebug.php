@@ -29,7 +29,7 @@ function RHalert($msg): void
  * @return string The text of the query and the result count or an empty string.
  *
  */
-function RHformatQuery(IDatabase $db, ResultWrapper $result = null): string
+function RHformatQuery(IDatabase $db, ?ResultWrapper $result = null): string
 {
     if (!RHisDev()) {
         return '';
@@ -48,7 +48,7 @@ function RHformatQuery(IDatabase $db, ResultWrapper $result = null): string
  * @return string The text of the query and the result count or an empty string.
  *
  */
-function RHformatQueryDbb(Database $db, ResultWrapper $result = null): string
+function RHformatQueryDbb(Database $db, ?ResultWrapper $result = null): string
 {
     if (!RHisDev()) {
         return '';
@@ -89,7 +89,7 @@ function RHlogFunctionText($text = ''): void
  * @return void
  *
  */
-function RHshow(mixed ...$msgs): void
+function RHshow(...$msgs): void
 {
     if (!RHisDev()) {
         return;
@@ -118,7 +118,7 @@ function RHshow(mixed ...$msgs): void
  * @return void
  *
  */
-function RHwriteFile(mixed ...$msgs): void
+function RHwriteFile(...$msgs): void
 {
     RHwriteAnyFile(RHDebug::$phLogFile, ...$msgs);
 }
@@ -132,7 +132,7 @@ function RHwriteFile(mixed ...$msgs): void
  * @return void
  *
  */
-function RHwriteAnyFile(string $file, mixed ...$msgs): void
+function RHwriteAnyFile(string $file, ...$msgs): void
 {
     if (!RHisDev()) {
         return;
