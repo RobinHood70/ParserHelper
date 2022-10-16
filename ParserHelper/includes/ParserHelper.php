@@ -120,7 +120,7 @@ abstract class ParserHelper
 	{
 		return
 			$frame->expand($magicArgs[self::NA_IF] ?? '1') &&
-			$frame->expand($magicArgs[self::NA_IFNOT] ?? '');
+			!$frame->expand($magicArgs[self::NA_IFNOT] ?? '');
 	}
 
 	/**
