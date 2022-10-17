@@ -118,9 +118,12 @@ abstract class ParserHelper
 	 */
 	public function checkIfs(PPFrame $frame, array $magicArgs): bool
 	{
-		return
-			$frame->expand($magicArgs[self::NA_IF] ?? '1') &&
-			!$frame->expand($magicArgs[self::NA_IFNOT] ?? '');
+		return (isset($magicArgs[self::NA_IF])
+				? $frame->expand($magicArgs[self::NA_IF])
+				: true) &&
+			!(isset($magicArgs[self::NA_IFNOT])
+				? $frame->expand($magicArgs[self::NA_IFNOT])
+				: false);
 	}
 
 	/**
