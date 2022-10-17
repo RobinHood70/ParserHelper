@@ -318,7 +318,7 @@ abstract class ParserHelper
 	 */
 	public function magicKeyEqualsValue(array $magicArguments, string $key, string $value): bool
 	{
-		$arrayValue = $magicArguments[$key];
+		$arrayValue = $magicArguments[$key] ?? null;
 		return
 			!is_null($arrayValue) &&
 			$this->getMagicWord($value)->matchStartToEnd($arrayValue);
