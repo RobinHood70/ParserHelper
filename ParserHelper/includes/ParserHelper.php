@@ -76,7 +76,7 @@ abstract class ParserHelper
 	}
 
 	/**
-	 * Checks the `case` parameter to see if matches `case=any` or any of the localized equivalents.
+	 * Checks the `case` parameter to see if it matches `case=any` or any of the localized equivalents.
 	 *
 	 * @param array $magicArgs The magic-word arguments as created by getMagicArgs().
 	 *
@@ -119,8 +119,8 @@ abstract class ParserHelper
 	public function checkIfs(PPFrame $frame, array $magicArgs): bool
 	{
 		return (isset($magicArgs[self::NA_IF])
-				? $frame->expand($magicArgs[self::NA_IF])
-				: true) &&
+			? $frame->expand($magicArgs[self::NA_IF])
+			: true) &&
 			!(isset($magicArgs[self::NA_IFNOT])
 				? $frame->expand($magicArgs[self::NA_IFNOT])
 				: false);
@@ -179,11 +179,11 @@ abstract class ParserHelper
 	 * @return array The modified text.
 	 *
 	 */
-	public function formatPFForDebug(string $output, bool $debug = false): array
+	public function formatPFForDebug(string $output, bool $debug): array
 	{
 		return $debug && strlen($output)
-			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false]
-			: $output;
+			? ['text' => '<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false]
+			: ['text' => $output, 'noparse' => false];
 	}
 
 	/**
@@ -196,11 +196,11 @@ abstract class ParserHelper
 	 * @return string The modified text.
 	 *
 	 */
-	public function formatTagForDebug(string $output, bool $debug = false, bool $noparse = false): array
+	public function formatTagForDebug(string $output, bool $debug): array
 	{
-		return $debug
-			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki', 'noparse' => $noparse]
-			: [$output, 'markerType' => 'none', 'noparse' => $noparse];
+		return $debug && strlen($output)
+			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki']
+			: [$output, 'markerType' => 'none'];
 	}
 
 	/**
@@ -264,6 +264,7 @@ abstract class ParserHelper
 			}
 		}
 
+		RHshow($values);
 		$values = array_reverse($values);
 		return [$magic, $values, $dupes];
 	}
