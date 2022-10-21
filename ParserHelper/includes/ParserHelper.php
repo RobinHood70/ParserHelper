@@ -179,11 +179,11 @@ abstract class ParserHelper
 	 * @return array The modified text.
 	 *
 	 */
-	public function formatPFForDebug(string $output, bool $debug): array
+	public function formatPFForDebug(string $output, bool $debug): string
 	{
 		return $debug && strlen($output)
-			? ['text' => '<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false]
-			: ['text' => $output, 'noparse' => false];
+			? '<pre>' . htmlspecialchars($output) . '</pre>'
+			: $output;
 	}
 
 	/**
@@ -264,7 +264,6 @@ abstract class ParserHelper
 			}
 		}
 
-		RHshow($values);
 		$values = array_reverse($values);
 		return [$magic, $values, $dupes];
 	}
