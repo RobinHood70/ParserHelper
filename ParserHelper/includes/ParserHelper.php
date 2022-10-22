@@ -404,7 +404,7 @@ abstract class ParserHelper
 	 * @param Parser $parser The parser in use.
 	 * @param mixed $output The output text to replace in.
 	 *
-	 * @return stroing
+	 * @return string
 	 *
 	 */
 	public abstract function replaceLinkHoldersText(Parser $parser, string $output): string;
