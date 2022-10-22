@@ -157,7 +157,8 @@ function RHwriteAnyFile(string $file, ...$msgs): void
  */
 function RHisDev(): bool
 {
-    return in_array($_SERVER['SERVER_NAME'], ['content3.uesp.net', 'dev.uesp.net', 'rob-centos']);
+    $server = $_SERVER['SERVER_NAME'] ?? null;
+    return in_array($server, ['content3.uesp.net', 'dev.uesp.net', 'rob-centos']);
 }
 
 class RHDebug
