@@ -157,6 +157,10 @@ function RHwriteAnyFile(string $file, ...$msgs): void
  */
 function RHisDev(): bool
 {
+    if (php_sapi_name() == 'cli') {
+        return true;
+    }
+
     $server = $_SERVER['SERVER_NAME'] ?? null;
     return in_array($server, ['content3.uesp.net', 'dev.uesp.net', 'rob-centos']);
 }
