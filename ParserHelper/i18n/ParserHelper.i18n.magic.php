@@ -7,7 +7,6 @@ $magicWords = [];
 $magicWords['en'] = [
 	'parserhelper-any' => [0, 'any'],
 	'parserhelper-always' => [0, 'always'],
-
 	'parserhelper-allowempty' => [0, 'allowempty'],
 	'parserhelper-case' => [0, 'case'],
 	'parserhelper-debug' => [0, 'debug'],

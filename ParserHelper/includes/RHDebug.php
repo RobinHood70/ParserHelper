@@ -81,6 +81,32 @@ function RHlogFunctionText($text = ''): void
     RHwriteFile($method, ': ', $text);
 }
 
+function RHlogTrace(int $limit = 0): void
+{
+    if (!RHisDev()) {
+        return;
+    }
+
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $limit == 0 ? 0 : $limit + 1);
+    if (count($trace) > 0) {
+        unset($trace[0]);
+    }
+
+    $lines = [];
+    foreach ($trace as $index => $line) {
+        $lines[] =
+            str_pad($line['class'], 20, ' ', STR_PAD_LEFT) .
+            $line['type'] .
+            str_pad($line['function'], 25) .
+            ' on line ' .
+            str_pad($line['line'], 4, ' ', STR_PAD_LEFT) .
+            ' of file ' .
+            $line['file'];
+    }
+
+    return implode("\n", $lines);
+}
+
 /**
  * Displays the provided message(s) on-screen, if possible.
  *
@@ -98,7 +124,7 @@ function RHshow(...$msgs): void
     echo '<pre>';
     foreach ($msgs as $msg) {
         if ($msg) {
-            // Function are separate for possible behaviour flags later on.
+            // Functions are separate for possible behaviour flags later on.
             // The double print_r is necessary here. The first converts it to something we can capture and run
             // htmlspecialchars on. The second one actually prints it.
             $msg = print_r($msg, true);
