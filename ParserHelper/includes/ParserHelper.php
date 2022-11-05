@@ -126,6 +126,12 @@ abstract class ParserHelper
 				: false);
 	}
 
+	public function error(string $langCode)
+	{
+		$msg = wfMessage($langCode)->inContentLanguage()->escaped();
+		return '<strong class="error">' . htmlspecialchars($msg) . '</strong>';
+	}
+
 	/**
 	 * Expands an entire array of values using the expansion frame provided. This is sometimes useful when parsing
 	 * arguments to parser functions.
@@ -342,6 +348,33 @@ abstract class ParserHelper
 		foreach ($this->getMagicWord($id)->getSynonyms() as $synonym) {
 			$parser->setHook($synonym, $callback);
 		}
+	}
+
+	/**
+	 * Splits named arguments from unnamed.
+	 *
+	 * @param PPFrame $frame The template frame in use.
+	 * @param ?array $args The arguments to split.
+	 *
+	 * @return array An array of arrays, the first element being the named values and the second element being the anonymous values.
+	 */
+	public static function splitNamedArgs(PPFrame $frame, ?array $args = null): array
+	{
+		$named = [];
+		$unnamed = [];
+		if (!is_null($args)) {
+			// $unnamed[] = $args[0];
+			for ($i = 0; $i < count($args); $i++) {
+				list($name, $value) = ParserHelper::getInstance()->getKeyValue($frame, $args[$i]);
+				if (is_null($name)) {
+					$unnamed[] = $value;
+				} else {
+					$named[(string)$name] = $value;
+				}
+			}
+		}
+
+		return [$named, $unnamed];
 	}
 
 	/**
