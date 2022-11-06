@@ -126,10 +126,11 @@ abstract class ParserHelper
 				: false);
 	}
 
-	public function error(string $langCode)
+	public function error(string $langCode, ...$args)
 	{
-		$msg = wfMessage($langCode)->inContentLanguage()->escaped();
-		return '<strong class="error">' . htmlspecialchars($msg) . '</strong>';
+		RHshow($args);
+		$msg = wfMessage($langCode)->params($args)->inContentLanguage()->text();
+		return '<strong class="error">' . $msg . '</strong>';
 	}
 
 	/**
