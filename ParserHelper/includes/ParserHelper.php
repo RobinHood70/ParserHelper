@@ -358,7 +358,7 @@ abstract class ParserHelper
 	 *
 	 * @return array An array of arrays, the first element being the named values and the second element being the anonymous values.
 	 */
-	public static function splitNamedArgs(PPFrame $frame, ?array $args = null): array
+	public function splitNamedArgs(PPFrame $frame, ?array $args = null): array
 	{
 		$named = [];
 		$unnamed = [];
