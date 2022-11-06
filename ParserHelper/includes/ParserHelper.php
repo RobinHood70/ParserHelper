@@ -128,7 +128,6 @@ abstract class ParserHelper
 
 	public function error(string $langCode, ...$args)
 	{
-		RHshow($args);
 		$msg = wfMessage($langCode)->params($args)->inContentLanguage()->text();
 		return '<strong class="error">' . $msg . '</strong>';
 	}
