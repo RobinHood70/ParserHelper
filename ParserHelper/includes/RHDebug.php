@@ -81,10 +81,10 @@ function RHlogFunctionText($text = ''): void
     RHwriteFile($method, ': ', $text);
 }
 
-function RHlogTrace(int $limit = 0): void
+function RHlogTrace(int $limit = 0): string
 {
     if (!RHisDev()) {
-        return;
+        return '';
     }
 
     $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $limit == 0 ? 0 : $limit + 1);
