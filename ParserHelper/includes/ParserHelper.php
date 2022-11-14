@@ -182,7 +182,7 @@ abstract class ParserHelper
 	 * @param bool $debug Whether to return debug or regular text.
 	 * @param bool $noparse If this falls through to regular output, whether or not to parse that output.
 	 *
-	 * @return array The modified text.
+	 * @return string The modified text.
 	 *
 	 */
 	public function formatPFForDebug(string $output, bool $debug): string
@@ -210,21 +210,52 @@ abstract class ParserHelper
 	}
 
 	/**
-	 * Returns an associative array of the named arguments that are allowed for a magic word or parser function along
-	 * with their values. The function checks all localized variants for a named argument and returns their associated
-	 * values under a single unified key.
+	 * Returns a string or part node split into a key/value pair, with the key expanded, if necessary, into a string.
+	 * The return value is always an array. If the argument is of the wrong type, or isn't a key/value pair, the key
+	 * will be returned as null and the value will be the original argument.
+	 *
+	 * @param PPFrame $frame The frame in use.
+	 * @param string|PPNode_Hash_Tree $arg The argument to work on.
+	 *
+	 * @return array
+	 */
+	public function getKeyValue(PPFrame $frame, $arg): array
+	{
+		if ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
+			$split = $arg->splitArg();
+			$key = empty($split['index']) ? $frame->expand($split['name']) : null;
+			return [$key, $split['value']];
+		}
+
+		if (is_string($arg)) {
+			$split = explode('=', $arg, 2);
+			if (count($split) == 2) {
+				return [$split[0], $split[1]];
+			}
+		}
+
+		// This handles both value-only nodes and unexpected values.
+		return [null, $arg];
+	}
+
+	/**
+	 * Splits the standard parser function arguments into recognized parameters and all others.
 	 *
 	 * @param PPFrame $frame The frame in use.
 	 * @param array $args The arguments to search.
 	 * @param mixed ...$allowedArgs A list of arguments that should be expanded and returned in the `$magic` portion of
 	 * the returned array. All other arguments will be returned in the `$values` portion of the returned array.
 	 *
-	 * @return array The return value consists of three arrays, all of which will have had their keys expanded:
-	 * - The first array contains the list of any named arguments from $args where the key appears in $allowedArgs.
-	 *   Values are also expanded for this array.
-	 * - The second array will contain any arguments that are anonymous or were not specified in $allowedArgs.
-	 * - The final array will contain any key-value pairs where the key was in $allowedArgs but appeared more than
-	 *   once. This allows custom handling of duplicates, as is done by #splitargs in Riven, for example.
+	 * @return array The return value consists of three arrays.
+	 * - Magic Arguments: contains the list of any named arguments where the key appears in $allowedArgs. Keys and
+	 *   values are pre-expanded under the assumption that they will be needed that way.
+	 * - Values: The second array will contain any arguments that are anonymous or were not specified in $allowedArgs.
+	 *   Although these are returned unaltered, anything before the first equals sign (if any) will have been expanded
+	 *   as part of processing. If there's no equals sign in the value, none of it will have been expanded.
+	 * - Duplicates: The final array will contain any key-value pairs where the key was in $allowedArgs but appeared
+	 *   more than once. This allows custom handling of duplicates, as is done by #splitargs in Riven, for example.
+	 *   Keys will always be expanded and will be unique. The values are an array of unexpanded arguments, and do not
+	 *   include the accepted (final) value.
 	 *
 	 */
 	public function getMagicArgs(PPFrame $frame, array $args = [], string ...$allowedArgs): array
@@ -239,7 +270,7 @@ abstract class ParserHelper
 		$allowedArray = new MagicWordArray($allowedArgs);
 
 		// TODO: Should be doable in a forwards direction, with duplicates only added if a key already exists.
-		// However, this changes a guaranteed array_reverse (and possible a second at the end) for having to check
+		// However, this changes a guaranteed array_reverse (and possibly a second at the end) for having to check
 		// isset() for every parameter. Might want to time this and see which performs better.
 		$args = array_reverse($args); // Make sure last value gets processed and any others go to $dupes.
 		foreach ($args as $arg) {
@@ -398,18 +429,6 @@ abstract class ParserHelper
 
 		return $retval;
 	}
-
-	/**
-	 * Returns a string or part node split into a key/value pair, with the key expanded, if necessary, into a string.
-	 * The return value is always an array. If the argument is of the wrong type, or isn't a key/value pair, the key
-	 * will be returned as null and the value will be the original argument.
-	 *
-	 * @param PPFrame $frame The frame in use.
-	 * @param string|PPNode_Hash_Tree $arg The argument to work on.
-	 *
-	 * @return array
-	 */
-	public abstract function getKeyValue(PPFrame $frame, $arg): array;
 
 	/**
 	 * Gets the magic word for the specified id.
