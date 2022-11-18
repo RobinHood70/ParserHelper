@@ -374,7 +374,7 @@ abstract class ParserHelper
 	 * @return void
 	 *
 	 */
-	public function setHookSynonyms(Parser $parser, string $id, callable $callback)
+	public function setHookSynonyms(Parser $parser, string $id, callable $callback): void
 	{
 		foreach ($this->getMagicWord($id)->getSynonyms() as $synonym) {
 			$parser->setHook($synonym, $callback);
@@ -409,18 +409,18 @@ abstract class ParserHelper
 	}
 
 	/**
-	 * Transforms tag arguments so that only wanted elements are present and are represented by their qqq key rather
+	 * Transforms tag attributes so that only wanted elements are present and are represented by their qqq key rather
 	 * than the language-specific word.
 	 *
-	 * @param array $args The arguments to filter.
+	 * @param array $attributes The attributes to transform.
 	 *
 	 * @return array The filtered array.
 	 *
 	 */
-	public function transformArgs(array $args): array
+	public function transformAttributes(array $attributes): array
 	{
 		$retval = [];
-		foreach ($args as $key => $value) {
+		foreach ($attributes as $key => $value) {
 			$match = $this->mwArray->matchStartToEnd($key);
 			if ($match) {
 				$retval[$match] = $value;
