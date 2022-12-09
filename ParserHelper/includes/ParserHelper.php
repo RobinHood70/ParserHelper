@@ -126,9 +126,9 @@ abstract class ParserHelper
 				: false);
 	}
 
-	public function error(string $langCode, ...$args)
+	public function error(string $key, ...$args)
 	{
-		$msg = wfMessage($langCode)->params($args)->inContentLanguage()->text();
+		$msg = wfMessage($key)->params($args)->inContentLanguage()->text();
 		return '<strong class="error">' . $msg . '</strong>';
 	}
 
