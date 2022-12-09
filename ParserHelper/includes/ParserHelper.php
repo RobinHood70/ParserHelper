@@ -413,15 +413,17 @@ abstract class ParserHelper
 	 * than the language-specific word.
 	 *
 	 * @param array $attributes The attributes to transform.
+	 * @param ?MagicWordArray The MagicWordArray to compare against. Defaults to previously registered magic words.
 	 *
 	 * @return array The filtered array.
 	 *
 	 */
-	public function transformAttributes(array $attributes): array
+	public function transformAttributes(array $attributes, ?MagicWordArray $magicWords = null): array
 	{
+		$magicWords = $magicWords ?? $this->mwArray;
 		$retval = [];
 		foreach ($attributes as $key => $value) {
-			$match = $this->mwArray->matchStartToEnd($key);
+			$match = $magicWords->matchStartToEnd($key);
 			if ($match) {
 				$retval[$match] = $value;
 			}
