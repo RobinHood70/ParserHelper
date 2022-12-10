@@ -129,7 +129,7 @@ abstract class ParserHelper
 	public function error(string $key, ...$args)
 	{
 		$msg = wfMessage($key)->params($args)->inContentLanguage()->text();
-		return '<strong class="error">' . $msg . '</strong>';
+		return '<strong class="error">' . htmlspecialchars($msg) . '</strong>';
 	}
 
 	/**
@@ -180,7 +180,6 @@ abstract class ParserHelper
 	 *
 	 * @param string $output The original text being output.
 	 * @param bool $debug Whether to return debug or regular text.
-	 * @param bool $noparse If this falls through to regular output, whether or not to parse that output.
 	 *
 	 * @return string The modified text.
 	 *
@@ -197,7 +196,6 @@ abstract class ParserHelper
 	 *
 	 * @param string $output The original text being output.
 	 * @param bool $debug Whether to return debug or regular text.
-	 * @param bool $noparse If this falls through to regular output, whether or not to parse that output.
 	 *
 	 * @return string The modified text.
 	 *
