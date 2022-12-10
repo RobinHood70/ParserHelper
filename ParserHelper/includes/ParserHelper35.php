@@ -27,7 +27,6 @@ class ParserHelper35 extends ParserHelper
         $reflector = new ReflectionObject($parser);
         $replaceLinks = $reflector->getMethod('replaceLinkHoldersText');
         $replaceLinks->setAccessible(true);
-        $output = $replaceLinks->invoke($parser, $output);
-        return $output;
+        return $replaceLinks->invoke($parser, $output);
     }
 }
