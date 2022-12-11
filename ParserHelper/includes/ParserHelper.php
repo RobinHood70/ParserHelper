@@ -391,10 +391,10 @@ abstract class ParserHelper
 	{
 		$named = [];
 		$unnamed = [];
-		if (!is_null($args)) {
+		if (!empty($args)) {
 			// $unnamed[] = $args[0];
-			for ($i = 0; $i < count($args); $i++) {
-				list($name, $value) = ParserHelper::getInstance()->getKeyValue($frame, $args[$i]);
+			foreach (array_values($args) as $arg) {
+				list($name, $value) = ParserHelper::getInstance()->getKeyValue($frame, $arg);
 				if (is_null($name)) {
 					$unnamed[] = $value;
 				} else {
