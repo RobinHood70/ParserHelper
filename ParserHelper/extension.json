@@ -20,7 +20,8 @@
 	},
 	"AutoloadClasses": {
 		"RHDebug": "includes/RHDebug.php",
-		"ParserHelper": "includes/ParserHelper.php"
+		"ParserHelper": "includes/ParserHelper.php",
+		"VersionHelper": "includes/VersionHelper.php"
 	},
 	"manifest_version": 1
 }

@@ -5,7 +5,7 @@ use MediaWiki\MediaWikiServices;
 /**
  * See base class for documentation.
  */
-class ParserHelper35 extends ParserHelper
+class VersionHelper35 extends VersionHelper
 {
     public function getMagicWord($id): MagicWord
     {

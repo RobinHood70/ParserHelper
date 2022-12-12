@@ -3,7 +3,7 @@
 /**
  * See base class for documentation.
  */
-class ParserHelper28 extends ParserHelper
+class VersionHelper28 extends VersionHelper
 {
     public function getMagicWord(string $id): MagicWord
     {
