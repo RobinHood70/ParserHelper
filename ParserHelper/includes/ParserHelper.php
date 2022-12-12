@@ -34,10 +34,7 @@ class ParserHelper
 	 */
 	public static function cacheMagicWords(array $magicWords): void
 	{
-		// TODO: Move most of the calls to this to something more appropriate. Magic Words should be unique and not
-		// appropriated for values. This should be straight-up localization and nothing more. Check how image options
-		// work, as these are likely to be similar.
-		if (isset(static->mwArray)) {
+		if (isset(self::$mwArray)) {
 			self::$mwArray->addArray($magicWords);
 		} else {
 			self::$mwArray = new MagicWordArray($magicWords);
