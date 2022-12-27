@@ -1,19 +1,19 @@
 <?php
 
+require_once('RHDebug.php');
+require_once('VersionHelper.php');
+
 /**
  * Provides a number of library routines, mostly related to the parser along with a few generic global methods.
  */
 class ParserHelper
 {
-	const AV_ANY = 'parserhelper-any';
-	const AV_ALWAYS = 'parserhelper-always';
+	public const AV_ALWAYS = 'parserhelper-always';
 
-	const NA_ALLOWEMPTY = 'parserhelper-allowempty';
-	const NA_CASE = 'parserhelper-case';
-	const NA_DEBUG = 'parserhelper-debug';
-	const NA_IF = 'parserhelper-if';
-	const NA_IFNOT = 'parserhelper-ifnot';
-	const NA_SEPARATOR = 'parserhelper-separator';
+	public const NA_DEBUG = 'parserhelper-debug';
+	public const NA_IF = 'parserhelper-if';
+	public const NA_IFNOT = 'parserhelper-ifnot';
+	public const NA_SEPARATOR  = 'parserhelper-separator';
 
 	/**
 	 * Cache for localized magic words.
@@ -42,18 +42,6 @@ class ParserHelper
 	}
 
 	/**
-	 * Checks the `case` parameter to see if it matches `case=any` or any of the localized equivalents.
-	 *
-	 * @param array $magicArgs The magic-word arguments as created by getMagicArgs().
-	 *
-	 * @return bool True if `case=any` or any localized equivalent was found in the argument list.
-	 */
-	public static function checkAnyCase(array $magicArgs): bool
-	{
-		return self::magicKeyEqualsValue($magicArgs, self::NA_CASE, self::AV_ANY);
-	}
-
-	/**
 	 * Checks the debug argument to see if it's boolean or 'always'.Expects the keys to be magic word values rather
 	 * than magic word IDs.
 	 *
@@ -69,8 +57,8 @@ class ParserHelper
 		$debug = $frame->expand($magicArgs[self::NA_DEBUG] ?? false);
 		// RHshow('Debug param: ', boolval($debug) ? 'Yes' : 'No', "\nIs preview: ", $parser->getOptions()->getIsPreview(), "\nDebug word: ", self::getMagicWord(self::AV_ALWAYS)->matchStartToEnd($debug));
 		return $parser->getOptions()->getIsPreview()
-			? boolval($debug)
-			: VersionHelper::getInstance()->getMagicWord(self::AV_ALWAYS)->matchStartToEnd($debug);
+			? (bool)$debug
+			: VersionHelper::getInstance()->getMagicWord(ParserHelper::AV_ALWAYS)->matchStartToEnd($debug);
 	}
 
 	/**
@@ -99,49 +87,6 @@ class ParserHelper
 	}
 
 	/**
-	 * Expands an entire array of values using the expansion frame provided. This is sometimes useful when parsing
-	 * arguments to parser functions.
-	 *
-	 * @param PPFrame $frame The frame in use.
-	 * @param array $values The values to expand.
-	 * @param bool $trim Whether the results should be trimmed prior to being returned.
-	 *
-	 * @return array The expanded array.
-	 *
-	 */
-	public static function expandArray(PPFrame $frame, array $values, bool $trim = false): array
-	{
-		// TODO: This is only used in one place and can probably be optimized within that context.
-		$retval = [];
-		if ($trim) {
-			foreach ($values as $value) {
-				$retval[] = trim($frame->expand($value));
-			}
-		} else {
-			foreach ($values as $value) {
-				$retval[] = $frame->expand($value);
-			}
-		}
-
-		return $retval;
-	}
-
-	/**
-	 * Finds the magic word ID that corresponds to the value provided.
-	 *
-	 * @param string $value The value to look up.
-	 * @param ?string $default The value to use if $value is not found.
-	 *
-	 * @return [type]
-	 *
-	 */
-	public static function findMagicID(string $value, ?string $default = null): ?string
-	{
-		$match = self::$mwArray->matchStartToEnd($value);
-		return $match === false ? $default : $match;
-	}
-
-	/**
 	 * Standardizes debug text formatting for parser functions.
 	 *
 	 * @param string $output The original text being output.
@@ -150,11 +95,11 @@ class ParserHelper
 	 * @return string The modified text.
 	 *
 	 */
-	public static function formatPFForDebug(string $output, bool $debug): string
+	public static function formatPFForDebug(string $output, bool $debug): array
 	{
 		return $debug && strlen($output)
-			? '<pre>' . htmlspecialchars($output) . '</pre>'
-			: $output;
+			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => true]
+			: [$output, 'noparse' => false];
 	}
 
 	/**
@@ -168,9 +113,14 @@ class ParserHelper
 	 */
 	public static function formatTagForDebug(string $output, bool $debug): array
 	{
-		return $debug && strlen($output)
-			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki']
-			: [$output, 'markerType' => 'none'];
+		if (!strlen($output)) {
+			return [''];
+		}
+
+		$retval = $debug
+			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki', 'noparse' => false]
+			: [$output, 'markerType' => 'none', 'noparse' => false];
+		return $retval;
 	}
 
 	/**
@@ -238,7 +188,7 @@ class ParserHelper
 		// isset() for every parameter. Might want to time this and see which performs better.
 		$args = array_reverse($args); // Make sure last value gets processed and any others go to $dupes.
 		foreach ($args as $arg) {
-			list($name, $value) = self::getKeyValue($frame, $arg);
+			[$name, $value] = self::getKeyValue($frame, $arg);
 			if (is_null($name)) {
 				// RHshow('Add anon: ', $frame->expand($value));
 				$values[] = $value;
@@ -298,14 +248,11 @@ class ParserHelper
 	 */
 	public static function init(): void
 	{
-		require_once(__DIR__ . '/RHDebug.php');
 		self::cacheMagicWords([
-			self::NA_ALLOWEMPTY,
-			self::NA_CASE,
 			self::NA_DEBUG,
 			self::NA_IF,
 			self::NA_IFNOT,
-			self::NA_SEPARATOR,
+			self::NA_SEPARATOR
 		]);
 	}
 
@@ -361,7 +308,7 @@ class ParserHelper
 		if (!empty($args)) {
 			// $unnamed[] = $args[0];
 			foreach (array_values($args) as $arg) {
-				list($name, $value) = self::getKeyValue($frame, $arg);
+				[$name, $value] = self::getKeyValue($frame, $arg);
 				if (is_null($name)) {
 					$unnamed[] = $value;
 				} else {
@@ -381,7 +328,7 @@ class ParserHelper
 	 * @param ?MagicWordArray The MagicWordArray to compare against. Defaults to previously registered magic words.
 	 *
 	 * @return array The filtered array.
-	 *
+	 *k
 	 */
 	public static function transformAttributes(array $attributes, ?MagicWordArray $magicWords = null): array
 	{
