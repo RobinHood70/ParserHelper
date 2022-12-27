@@ -13,13 +13,6 @@ abstract class VersionHelper
 	private static $instance;
 
 	/**
-	 * Cache for localized magic words.
-	 *
-	 * @var MagicWordArray
-	 */
-	private static $mwArray;
-
-	/**
 	 * Gets the singleton instance for this class.
 	 *
 	 * @return VersionHelper The singleton instance.
