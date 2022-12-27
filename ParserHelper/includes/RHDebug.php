@@ -197,4 +197,9 @@ class RHDebug
      * Where to log to for the global functions that need it.
      */
     public static $phLogFile = 'ParserHelperLog.txt';
+
+    public static function noop()
+    {
+        // This function exists only to force PHP to include the global functions, above.
+    }
 }
