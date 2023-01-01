@@ -118,7 +118,7 @@ class ParserHelper
 		}
 
 		$retval = $debug
-			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki', 'noparse' => false]
+			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki', 'noparse' => true]
 			: [$output, 'markerType' => 'none', 'noparse' => false];
 		return $retval;
 	}
