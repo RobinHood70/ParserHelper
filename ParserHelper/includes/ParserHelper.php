@@ -55,7 +55,7 @@ class ParserHelper
 	public static function checkDebugMagic(Parser $parser, PPFrame $frame, array $magicArgs): bool
 	{
 		$debug = $frame->expand($magicArgs[self::NA_DEBUG] ?? false);
-		// RHshow('Debug param: ', boolval($debug) ? 'Yes' : 'No', "\nIs preview: ", $parser->getOptions()->getIsPreview(), "\nDebug word: ", self::getMagicWord(self::AV_ALWAYS)->matchStartToEnd($debug));
+		#RHshow('Debug param: ', boolval($debug) ? 'Yes' : 'No', "\nIs preview: ", $parser->getOptions()->getIsPreview(), "\nDebug word: ", self::getMagicWord(self::AV_ALWAYS)->matchStartToEnd($debug));
 		return $parser->getOptions()->getIsPreview()
 			? (bool)$debug
 			: VersionHelper::getInstance()->getMagicWord(ParserHelper::AV_ALWAYS)->matchStartToEnd($debug);
@@ -95,11 +95,11 @@ class ParserHelper
 	 * @return string The modified text.
 	 *
 	 */
-	public static function formatPFForDebug(string $output, bool $debug): array
+	public static function formatPFForDebug(string $output, bool $debug, bool $noparse = false): array
 	{
 		return $debug && strlen($output)
 			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => true]
-			: [$output, 'noparse' => false];
+			: [$output, 'noparse' => $noparse];
 	}
 
 	/**
@@ -190,7 +190,7 @@ class ParserHelper
 		foreach ($args as $arg) {
 			[$name, $value] = self::getKeyValue($frame, $arg);
 			if (is_null($name)) {
-				// RHshow('Add anon: ', $frame->expand($value));
+				#RHshow('Add anon: ', $frame->expand($value));
 				$values[] = $value;
 			} else {
 				$name = trim($name);
