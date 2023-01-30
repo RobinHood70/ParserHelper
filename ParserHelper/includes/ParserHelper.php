@@ -98,7 +98,8 @@ class ParserHelper
 	public static function formatPFForDebug(string $output, bool $debug, bool $noparse = false): array
 	{
 		return $debug && strlen($output)
-			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => true]
+			// Noparse needs to be false for debugging so that <pre> tag correctly breaks all processing.
+			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false]
 			: [$output, 'noparse' => $noparse];
 	}
 
@@ -117,10 +118,10 @@ class ParserHelper
 			return [''];
 		}
 
-		$retval = $debug
-			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki', 'noparse' => true]
+		return $debug
+			// Noparse needs to be false for debugging so that <pre> tag correctly breaks all processing.
+			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'markerType' => 'nowiki', 'noparse' => false]
 			: [$output, 'markerType' => 'none', 'noparse' => false];
-		return $retval;
 	}
 
 	/**
@@ -209,7 +210,6 @@ class ParserHelper
 						$magic[$magKey] = trim($frame->expand($value));
 					}
 				} else {
-					// RHDebug::show('Add fake k=v: ', $frame->expand($arg));
 					$values[] = $arg;
 				}
 			}
