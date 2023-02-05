@@ -136,6 +136,11 @@ function RHshow(...$msgs): void
     echo '</pre>';
 }
 
+function RHshowBacktrace(): void
+{
+    RHshow((new Exception())->getTraceAsString());
+}
+
 /**
  * Writes the provided text to the log file specified in PH_LOG_FILE.
  *
