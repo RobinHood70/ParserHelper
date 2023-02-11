@@ -146,7 +146,7 @@ function RHecho(...$msgs): void
  */
 function RHshow($intro, ...$msgs): void
 {
-    RHecho($intro . ': ', $msgs);
+    RHecho($intro . ': ', ...$msgs);
 }
 
 function RHshowBacktrace(): void
