@@ -151,7 +151,7 @@ function RHshow($intro, ...$msgs): void
 
 function RHshowBacktrace(): void
 {
-    RHshow((new Exception())->getTraceAsString());
+    RHecho((new Exception())->getTraceAsString());
 }
 
 /**
