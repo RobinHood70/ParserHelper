@@ -108,14 +108,14 @@ function RHlogTrace(int $limit = 0): string
 }
 
 /**
- * Displays the provided message(s) on-screen, if possible.
+ * Displays the provided message(s) on-screen.
  *
  * @param mixed ...$msgs
  *
  * @return void
  *
  */
-function RHshow(...$msgs): void
+function RHecho(...$msgs): void
 {
     if (!RHisDev()) {
         return;
@@ -134,6 +134,19 @@ function RHshow(...$msgs): void
     }
 
     echo '</pre>';
+}
+
+/**
+ * Displays the provided intro text and message(s) on-screen.
+ *
+ * @param mixed ...$msgs
+ *
+ * @return void
+ *
+ */
+function RHshow($intro, ...$msgs): void
+{
+    RHshow($intro . ': ', $msgs);
 }
 
 function RHshowBacktrace(): void
