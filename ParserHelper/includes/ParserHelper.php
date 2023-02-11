@@ -55,10 +55,13 @@ class ParserHelper
 	public static function checkDebugMagic(Parser $parser, PPFrame $frame, array $magicArgs): bool
 	{
 		$debug = $frame->expand($magicArgs[self::NA_DEBUG] ?? false);
-		#RHshow('Debug param', boolval($debug) ? 'Yes' : 'No', "\nIs preview: ", $parser->getOptions()->getIsPreview(), "\nDebug word: ", self::getMagicWord(self::AV_ALWAYS)->matchStartToEnd($debug));
-		return $parser->getOptions()->getIsPreview()
+		$matched = VersionHelper::getInstance()->getMagicWord(self::AV_ALWAYS)->matchStartToEnd($debug);
+		$preview = $parser->getOptions()->getIsPreview();
+		$retval = $preview
 			? (bool)$debug
-			: VersionHelper::getInstance()->getMagicWord(ParserHelper::AV_ALWAYS)->matchStartToEnd($debug);
+			: $matched;
+		#RHshow('Debug', (bool)$debug ? 'Yes' : 'No', "\nIn preview mode: ", $preview ? 'Yes' : 'No', "\nDebug word: ", $matched);
+		return $retval;
 	}
 
 	/**
