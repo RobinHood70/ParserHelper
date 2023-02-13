@@ -123,7 +123,9 @@ class ParserHelper
 		if ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
 			$split = $arg->splitArg();
 			$key = empty($split['index']) ? $frame->expand($split['name']) : null;
-			return [$key, $split['value']];
+			$value = $split['value'];
+			#RHshow('Raw Value', $key, '=', $value);
+			return [$key, $value];
 		}
 
 		if (is_string($arg)) {
@@ -257,7 +259,7 @@ class ParserHelper
 				if (is_null($name)) {
 					$unnamed[] = $value;
 				} else {
-					$named[(string)$name] = $value;
+					$named[$name] = $value;
 				}
 			}
 		}
