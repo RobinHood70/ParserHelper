@@ -10,7 +10,6 @@
 	"requires": {
 		"MediaWiki": ">= 1.27.0"
 	},
-	"callback": "ParserHelper::init",
 	"MessagesDirs": {
 		"ParserHelper": [
 			"i18n"

@@ -23,25 +23,6 @@ class ParserHelper
 	private static $mwArray;
 
 	/**
-	 * Caches magic words in a static MagicWordArray. This should include any named arguments or argument values that
-	 * need to be localized, along with any other magic words not already registered with the parser by other means,
-	 * such as parser functions, tags, and so forth.
-	 *
-	 * @param array $magicWords The magic words to cache.
-	 *
-	 * @return void
-	 *
-	 */
-	public static function cacheMagicWords(array $magicWords): void
-	{
-		if (isset(self::$mwArray)) {
-			self::$mwArray->addArray($magicWords);
-		} else {
-			self::$mwArray = new MagicWordArray($magicWords);
-		}
-	}
-
-	/**
 	 * Checks the debug argument to see if it's boolean or 'always'.Expects the keys to be magic word values rather
 	 * than magic word IDs.
 	 *
@@ -161,65 +142,41 @@ class ParserHelper
 	 *
 	 * @param PPFrame $frame The frame in use.
 	 * @param array $args The arguments to search.
-	 * @param mixed ...$allowedArgs A list of arguments that should be expanded and returned in the `$magic` portion of
-	 * the returned array. All other arguments will be returned in the `$values` portion of the returned array.
+	 * @param MagicWordArray|mixed ...$allowedArgs A list of arguments that should be expanded and returned in the
+	 *     `$magic` portion of the returned array. All other arguments will be returned in the `$values` portion of
+	 *     the returned array. Currently accepts either an array of magic words constants (e.g. ParserHelper::NA_IF)
+	 *     or a MagicWordArray of the same constants. The former is now deprecated; MagicWordArrays should be used in
+	 *     all future code.
 	 *
-	 * @return array The return value consists of three arrays.
-	 * - Magic Arguments: contains the list of any named arguments where the key appears in $allowedArgs. Keys and
-	 *   values are pre-expanded under the assumption that they will be needed that way.
-	 * - Values: The second array will contain any arguments that are anonymous or were not specified in $allowedArgs.
-	 *   Although these are returned unaltered, anything before the first equals sign (if any) will have been expanded
-	 *   as part of processing. If there's no equals sign in the value, none of it will have been expanded.
-	 * - Duplicates: The final array will contain any key-value pairs where the key was in $allowedArgs but appeared
-	 *   more than once. This allows custom handling of duplicates, as is done by #splitargs in Riven, for example.
-	 *   Keys will always be expanded and will be unique. The values are an array of unexpanded arguments, and do not
-	 *   include the accepted (final) value.
+	 * @return array The return value consists of three arrays:
+	 *     Magic Arguments: contains the list of any named arguments where the key appears in $allowedArray. Keys and
+	 *         values are pre-expanded under the assumption that they will be needed that way.
+	 *     Values: The second array will contain any arguments that are anonymous or were not specified in
+	 *         $allowedArgs. Although these are returned unaltered, anything before the first equals sign (if any) will
+	 *         have been expanded as part of processing. If there's no equals sign in the value, none of it will have
+	 *         been expanded.
 	 *
 	 */
-	public static function getMagicArgs(PPFrame $frame, array $args = [], string ...$allowedArgs): array
+	public static function getMagicArgs(PPTemplateFrame_Hash $frame, array $args, MagicWordArray $allowedArray): array
 	{
-		if (!count($args)) {
-			return [[], [], []];
-		}
-
 		$magic = [];
 		$values = [];
-		$dupes = [];
-		$allowedArray = new MagicWordArray($allowedArgs);
 
-		// TODO: Should be doable in a forwards direction, with duplicates only added if a key already exists.
-		// However, this changes a guaranteed array_reverse (and possibly a second at the end) for having to check
-		// isset() for every parameter. Might want to time this and see which performs better.
-		$args = array_reverse($args); // Make sure last value gets processed and any others go to $dupes.
 		foreach ($args as $arg) {
 			[$name, $value] = self::getKeyValue($frame, $arg);
 			if (is_null($name)) {
-				#RHshow('Add anon', $frame->expand($value));
 				$values[] = $value;
 			} else {
-				$name = trim($name);
-				$magKey = $allowedArray->matchStartToEnd($name);
-				if ($magKey) {
-					if (isset($magic[$magKey])) {
-						// If a key already exists and is one of the allowed keys, add it to the dupes list. This
-						// allows for the possibility of merging the duplicates back into values later on for cases
-						// like #splitargs where it may be desirable to have keys for the called template
-						// (e.g., separator) that overlap with those of the template.
-						if (!isset($dupes[$name])) {
-							// TODO: change this to `$dupes[$name][] = $value` to allow for multiple duplicates.
-							$dupes[$name] = $value;
-						}
-					} else {
-						$magic[$magKey] = trim($frame->expand($value));
-					}
+				$magKey = $allowedArray->matchStartToEnd(trim($name));
+				if ($magKey && !isset($magic[$magKey])) {
+					$magic[$magKey] = trim($frame->expand($value));
 				} else {
 					$values[] = $arg;
 				}
 			}
 		}
 
-		$values = array_reverse($values);
-		return [$magic, $values, $dupes];
+		return [$magic, $values];
 	}
 
 	/**
@@ -242,21 +199,6 @@ class ParserHelper
 		}
 
 		return $separator;
-	}
-
-	/**
-	 * Initializes ParserHelper, caching all required magic words.
-	 *
-	 * @return void
-	 */
-	public static function init(): void
-	{
-		self::cacheMagicWords([
-			self::NA_DEBUG,
-			self::NA_IF,
-			self::NA_IFNOT,
-			self::NA_SEPARATOR
-		]);
 	}
 
 	/**
@@ -333,9 +275,8 @@ class ParserHelper
 	 * @return array The filtered array.
 	 *k
 	 */
-	public static function transformAttributes(array $attributes, ?MagicWordArray $magicWords = null): array
+	public static function transformAttributes(array $attributes, MagicWordArray $magicWords): array
 	{
-		$magicWords = $magicWords ?? self::$mwArray;
 		$retval = [];
 		foreach ($attributes as $key => $value) {
 			$match = $magicWords->matchStartToEnd($key);
