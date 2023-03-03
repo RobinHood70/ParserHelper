@@ -41,7 +41,7 @@ class ParserHelper
 		$retval = $preview
 			? (bool)$debug
 			: $matched;
-		#RHshow('Debug', (bool)$debug ? 'Yes' : 'No', "\nIn preview mode: ", $preview ? 'Yes' : 'No', "\nDebug word: ", $matched);
+		#RHshow('Debug', $debug ? 'Yes' : 'No', "\nIn preview mode: ", $preview ? 'Yes' : 'No', "\nDebug word: ", $matched);
 		return $retval;
 	}
 
@@ -79,12 +79,19 @@ class ParserHelper
 	 * @return string The modified text.
 	 *
 	 */
-	public static function formatPFForDebug(string $output, bool $debug, bool $noparse = false): array
+	public static function formatPFForDebug(string $output, bool $debug, bool $noparse = false, string $header = null): array
 	{
-		return $debug && strlen($output)
-			// Noparse needs to be false for debugging so that <pre> tag correctly breaks all processing.
-			? ['<pre>' . htmlspecialchars($output) . '</pre>', 'noparse' => false]
-			: [$output, 'noparse' => $noparse];
+		if (!$debug || !strlen($output)) {
+			return [$output, 'noparse' => $noparse];
+		}
+
+		$out =  "<table class=hiddentable>";
+		if ($header) {
+			$out .= "<th>$header</th>";
+		}
+
+		$out .= '<tr><td><pre>' . htmlspecialchars($output) . '</pre></td></tr></table>';
+		return [$out, 'noparse' => false];
 	}
 
 	/**
@@ -120,12 +127,16 @@ class ParserHelper
 	 */
 	public static function getKeyValue(PPFrame $frame, $arg): array
 	{
-		if ($arg instanceof PPNode_Hash_Tree && $arg->getName() === 'part') {
-			$split = $arg->splitArg();
-			$key = empty($split['index']) ? $frame->expand($split['name']) : null;
-			$value = $split['value'];
-			#RHshow('Raw Value', $key, '=', $value);
-			return [$key, $value];
+		if ($arg instanceof PPNode_Hash_Tree) {
+			switch ($arg->name) {
+				case 'part': // Args
+					$split = $arg->splitArg();
+					$key = $split['index'] ? null : $frame->expand($split['name']);
+					$value = $split['value'];
+					return [$key, $value];
+				case 'value': // Frame
+					return [null, $arg];
+			}
 		}
 
 		if (is_string($arg)) {
@@ -133,10 +144,12 @@ class ParserHelper
 			if (count($split) == 2) {
 				return [$split[0], $split[1]];
 			}
+
+			return [null, $arg];
 		}
 
-		// This handles both value-only nodes and unexpected values.
-		return [null, $arg];
+		#RHshow('Invalid arg', $arg);
+		throw new InvalidArgumentException('Argument format was not recognized.');
 	}
 
 	/**
@@ -159,7 +172,7 @@ class ParserHelper
 	 *         been expanded.
 	 *
 	 */
-	public static function getMagicArgs(PPTemplateFrame_Hash $frame, array $args, MagicWordArray $allowedArray): array
+	public static function getMagicArgs(PPFrame $frame, array $args, MagicWordArray $allowedArray): array
 	{
 		$magic = [];
 		$values = [];
