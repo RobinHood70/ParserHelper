@@ -117,13 +117,13 @@ function RHlogTrace(int $limit = 0): string
  */
 function RHecho(...$msgs): void
 {
-	if (!RHisDev()) {
+	if (!RHisDev() || !$msgs) {
 		return;
 	}
 
 	echo '<pre>';
 	foreach ($msgs as $msg) {
-		if ($msg) {
+		if (!is_null($msg)) {
 			// Functions are separate for possible behaviour flags later on.
 			// The double print_r is necessary here. The first converts it to something we can capture and run
 			// htmlspecialchars on. The second one actually prints it.
@@ -164,7 +164,24 @@ function RHshowBacktrace(): void
  */
 function RHwriteFile(...$msgs): void
 {
-	RHwriteAnyFile(RHDebug::$phLogFile, ...$msgs);
+	if (!RHisDev()) {
+		return;
+	}
+
+	$file = RHDebug::$phLogFile;
+	$handle = fopen($file, 'a') or die("Cannot open file: $file");
+
+	[$msec, $sec] = explode(' ', microtime());
+	$msec = str_pad(round($msec, 2), 4, '0');
+	fwrite($handle, '(' . date('Y-m-d H:i:s', $sec) . substr($msec, 1) . ') ');
+	foreach ($msgs as $msg) {
+		$msg2 = print_r($msg, true);
+		fwrite($handle, $msg2);
+	}
+
+	fwrite($handle, "\n");
+	fflush($handle);
+	fclose($handle);
 }
 
 /**
