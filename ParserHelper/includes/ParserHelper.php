@@ -85,12 +85,12 @@ class ParserHelper
 			return [$output, 'noparse' => $noparse];
 		}
 
-		$out =  "<table class=hiddentable>";
+		$out =  "<table style='background:transparent; border:0px none; margin:0px; border-collapse:collapse;'>";
 		if ($header) {
-			$out .= "<th>$header</th>";
+			$out .= "<th style='background:transparent; border:0px none; margin:0px;'>$header</th>";
 		}
 
-		$out .= '<tr><td><pre>' . htmlspecialchars($output) . '</pre></td></tr></table>';
+		$out .= '<tr><td style="background:transparent; border:0px none; margin:0px;"><pre>' . htmlspecialchars($output) . '</pre></td></tr></table>';
 		return [$out, 'noparse' => false];
 	}
 
