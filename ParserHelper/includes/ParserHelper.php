@@ -149,7 +149,7 @@ class ParserHelper
 		}
 
 		#RHshow('Invalid arg', $arg);
-		throw new InvalidArgumentException('Argument format was not recognized.');
+		throw new InvalidArgumentException('Argument format was not recognized: ' .  get_class($arg));
 	}
 
 	/**
@@ -233,24 +233,6 @@ class ParserHelper
 		return
 			!is_null($arrayValue) &&
 			VersionHelper::getInstance()->getMagicWord($value)->matchStartToEnd($arrayValue);
-	}
-
-	/**
-	 * Calls setHook() for all synonyms of a tag.
-	 *
-	 * @param Parser $parser The parser to register the tag names with.
-	 * @param string $id The magic word ID whose synonyms should be registered.
-	 * @param callable $callback The function to call when the tag is used.
-	 *
-	 * @return void
-	 *
-	 */
-	public static function setHookSynonyms(Parser $parser, string $id, callable $callback): void
-	{
-		$synonyms = VersionHelper::getInstance()->getMagicWord($id)->getSynonyms();
-		foreach ($synonyms as $synonym) {
-			$parser->setHook($synonym, $callback);
-		}
 	}
 
 	/**
