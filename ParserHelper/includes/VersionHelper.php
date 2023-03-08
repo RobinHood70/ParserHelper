@@ -21,13 +21,15 @@ abstract class VersionHelper
 	public static function getInstance(): VersionHelper
 	{
 		if (!self::$instance) {
-			$useNew = defined('MW_VERSION') && version_compare(constant('MW_VERSION'), '1.35', '>=');
-			if ($useNew) {
+			$version = constant('MW_VERSION');
+			if (version_compare($version, '1.28', '>=')) {
+				require_once(__DIR__ . '/VersionHelper28.php');
+				self::$instance = new VersionHelper28();
+			} elseif (version_compare($version, '1.35', '>=')) {
 				require_once(__DIR__ . '/VersionHelper35.php');
 				self::$instance = new VersionHelper35();
 			} else {
-				require_once(__DIR__ . '/VersionHelper28.php');
-				self::$instance = new VersionHelper28();
+				throw 'MediaWiki version could not be found or is too low.';
 			}
 		}
 
