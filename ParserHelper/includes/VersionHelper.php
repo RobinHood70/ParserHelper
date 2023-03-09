@@ -1,17 +1,22 @@
 <?php
 
+use Elastica\QueryBuilder\Version;
+
 /**
  * Provides version-specific methods for those calls that differ substantially across versions.
  */
 abstract class VersionHelper
 {
+	#region Private Static Variables
 	/**
 	 * Instance variable for singleton.
 	 *
 	 * @var VersionHelper
 	 */
 	private static $instance;
+	#endregion
 
+	#region Public Static Functions
 	/**
 	 * Gets the singleton instance for this class.
 	 *
@@ -21,21 +26,29 @@ abstract class VersionHelper
 	public static function getInstance(): VersionHelper
 	{
 		if (!self::$instance) {
-			$version = constant('MW_VERSION');
-			if (version_compare($version, '1.28', '>=')) {
-				require_once(__DIR__ . '/VersionHelper28.php');
-				self::$instance = new VersionHelper28();
-			} elseif (version_compare($version, '1.35', '>=')) {
+			$version = VersionHelper::getMWVersion();
+			if (version_compare($version, '1.35', '>=')) {
 				require_once(__DIR__ . '/VersionHelper35.php');
 				self::$instance = new VersionHelper35();
+			} elseif (version_compare($version, '1.28', '>=')) {
+				require_once(__DIR__ . '/VersionHelper28.php');
+				self::$instance = new VersionHelper28();
 			} else {
-				throw 'MediaWiki version could not be found or is too low.';
+				throw new Exception('MediaWiki version could not be found or is too low.');
 			}
 		}
 
 		return self::$instance;
 	}
 
+	public static function getMWVersion(): string
+	{
+		global $wgVersion;
+		return defined('MW_VERSION') ? constant('MW_VERSION') : $wgVersion;
+	}
+	#endregion
+
+	#region Public Abstract Functions
 	/**
 	 * Gets the magic word for the specified id.
 	 *
