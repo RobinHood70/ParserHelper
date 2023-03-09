@@ -16,13 +16,6 @@ class ParserHelper
 	public const NA_SEPARATOR  = 'parserhelper-separator';
 
 	/**
-	 * Cache for localized magic words.
-	 *
-	 * @var MagicWordArray
-	 */
-	private static $mwArray;
-
-	/**
 	 * Checks the debug argument to see if it's boolean or 'always'.Expects the keys to be magic word values rather
 	 * than magic word IDs.
 	 *
