@@ -50,10 +50,10 @@ class ParserHelper
 	public static function checkIfs(PPFrame $frame, array $magicArgs): bool
 	{
 		return (isset($magicArgs[self::NA_IF])
-			? $frame->expand($magicArgs[self::NA_IF])
+			? trim($frame->expand($magicArgs[self::NA_IF]))
 			: true) &&
 			!(isset($magicArgs[self::NA_IFNOT])
-				? $frame->expand($magicArgs[self::NA_IFNOT])
+				? trim($frame->expand($magicArgs[self::NA_IFNOT]))
 				: false);
 	}
 
@@ -116,7 +116,8 @@ class ParserHelper
 	 * @param PPFrame $frame The frame in use.
 	 * @param string|PPNode_Hash_Tree $arg The argument to work on.
 	 *
-	 * @return array
+	 * @return array tuple<string, PPNode_Hash_Tree|string> The trimmed key and the native value. Because we don't know
+	 *     what the caller wants to do, value is left in its native format and is untrimmed.
 	 */
 	public static function getKeyValue(PPFrame $frame, $arg): array
 	{
@@ -124,7 +125,7 @@ class ParserHelper
 			($arg instanceof PPNode_DOM && $arg->node->tagName === 'part')
 		) {
 			$split = $arg->splitArg();
-			$key = $split['index'] ? null : $frame->expand($split['name']);
+			$key = $split['index'] ? null : trim($frame->expand($split['name']));
 			$value = $split['value'];
 			return [$key, $value];
 		}
@@ -132,7 +133,7 @@ class ParserHelper
 		if (is_string($arg)) {
 			$split = explode('=', $arg, 2);
 			if (count($split) == 2) {
-				return [$split[0], $split[1]];
+				return [trim($split[0]), $split[1]];
 			}
 		}
 
@@ -254,7 +255,7 @@ class ParserHelper
 		$unnamed = [];
 		if (!empty($args)) {
 			// $unnamed[] = $args[0];
-			foreach (array_values($args) as $arg) {
+			foreach ($args as $ignored => $arg) {
 				[$name, $value] = self::getKeyValue($frame, $arg);
 				if (is_null($name)) {
 					$unnamed[] = $value;
