@@ -109,9 +109,9 @@ class ParserHelper
 	}
 
 	/**
-	 * Returns a string or part node split into a key/value pair, with the key expanded, if necessary, into a string.
-	 * The return value is always an array. If the argument is of the wrong type, or isn't a key/value pair, the key
-	 * will be returned as null and the value will be the original argument.
+	 * Attempts to find an argument with the given key and returns it as a key/value pair with the key expanded into a
+	 * string. The return value is always an array. If the argument is a value only or isn't a recognized key/value
+	 * pair, the key will be returned as null and the value will be the original argument.
 	 *
 	 * @param PPFrame $frame The frame in use.
 	 * @param string|PPNode_Hash_Tree $arg The argument to work on.
@@ -120,16 +120,13 @@ class ParserHelper
 	 */
 	public static function getKeyValue(PPFrame $frame, $arg): array
 	{
-		if ($arg instanceof PPNode_Hash_Tree) {
-			switch ($arg->name) {
-				case 'part': // Args
-					$split = $arg->splitArg();
-					$key = $split['index'] ? null : $frame->expand($split['name']);
-					$value = $split['value'];
-					return [$key, $value];
-				case 'value': // Frame
-					return [null, $arg];
-			}
+		if (($arg instanceof PPNode_Hash_Tree && $arg->name === 'part') ||
+			($arg instanceof PPNode_DOM && $arg->node->tagName === 'part')
+		) {
+			$split = $arg->splitArg();
+			$key = $split['index'] ? null : $frame->expand($split['name']);
+			$value = $split['value'];
+			return [$key, $value];
 		}
 
 		if (is_string($arg)) {
@@ -137,12 +134,9 @@ class ParserHelper
 			if (count($split) == 2) {
 				return [$split[0], $split[1]];
 			}
-
-			return [null, $arg];
 		}
 
-		#RHshow('Invalid arg', $arg);
-		throw new InvalidArgumentException('Argument format was not recognized.');
+		return [null, $arg];
 	}
 
 	/**
