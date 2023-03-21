@@ -8,13 +8,16 @@ require_once('VersionHelper.php');
  */
 class ParserHelper
 {
+	#region Public Constants
 	public const AV_ALWAYS = 'parserhelper-always';
 
 	public const NA_DEBUG = 'parserhelper-debug';
 	public const NA_IF = 'parserhelper-if';
 	public const NA_IFNOT = 'parserhelper-ifnot';
 	public const NA_SEPARATOR  = 'parserhelper-separator';
+	#endregion
 
+	#region Public Static Functions
 	/**
 	 * Checks the debug argument to see if it's boolean or 'always'.Expects the keys to be magic word values rather
 	 * than magic word IDs.
@@ -57,10 +60,19 @@ class ParserHelper
 				: false);
 	}
 
-	public static function error(string $key, ...$args)
+	/**
+	 * Formats an error message for wikitext output.
+	 *
+	 * @param string $key The message key in en.json.
+	 * @param mixed ...$args Any arguments to be passed to the message.
+	 *
+	 * @return string The error text wrapped in div tags with an error class.
+	 *
+	 */
+	public static function error(string $key, ...$args): string
 	{
-		$msg = wfMessage($key)->params($args)->inContentLanguage()->text();
-		return '<strong class="error">' . htmlspecialchars($msg) . '</strong>';
+		$msg = wfMessage($key)->params($args)->inContentLanguage()->escaped();
+		return "<div class='error'>$msg</div>";
 	}
 
 	/**
@@ -290,4 +302,20 @@ class ParserHelper
 
 		return $retval;
 	}
+
+	/**
+	 * Formats an error message for wikitext output. Any HTML in the final result will be escaped so it is displayed on screen.
+	 *
+	 * @param string $key The message key in en.json.
+	 * @param mixed ...$args Any arguments to be passed to the message.
+	 *
+	 * @return string The error text wrapped in div tags with an error class.
+	 *
+	 */
+	public static function unescapedError(string $key, ...$args): string
+	{
+		$msg = wfMessage($key)->params($args)->inContentLanguage()->text();
+		return "<div class='error'>$msg</div>";
+	}
+	#endregion
 }
