@@ -5,6 +5,20 @@
  */
 class VersionHelper28 extends VersionHelper
 {
+	public function fileExists(Title $title): bool
+	{
+		$file = RepoGroup::singleton()->getLocalRepo()->newFile($title);
+		return (bool)$file && $file->exists();
+	}
+
+	public function findVariantLink(Parser $parser, string &$titleText, Title &$title): void
+	{
+		$language = $parser->getFunctionLang();
+		if ($language->hasVariants()) {
+			$language->findVariantLink($titleText, $title, true);
+		}
+	}
+
 	public function getMagicWord(string $id): MagicWord
 	{
 		return MagicWord::get($id);
@@ -15,8 +29,18 @@ class VersionHelper28 extends VersionHelper
 		return $parser->mStripState;
 	}
 
-	public function replaceLinkHoldersText(Parser $parser, string $output): string
+	public function handleInternalLinks(Parser $parser, string $text): string
 	{
-		return $parser->replaceLinkHoldersText($output);
+		return $parser->replaceInternalLinks($text);
+	}
+
+	public function replaceLinkHoldersText(Parser $parser, string $text): string
+	{
+		return $parser->replaceLinkHoldersText($text);
+	}
+
+	public function specialPageExists(Title $title): bool
+	{
+		return SpecialPageFactory::exists($title->getDBkey());
 	}
 }

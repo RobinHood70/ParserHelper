@@ -7,6 +7,19 @@ use MediaWiki\MediaWikiServices;
  */
 class VersionHelper35 extends VersionHelper
 {
+	public function fileExists(Title $title): bool
+	{
+		return MediaWikiServices::getInstance()->getRepoGroup()->findFile($title);
+	}
+
+	public function findVariantLink(Parser $parser, string &$titleText, Title &$title): void
+	{
+		$lc = self::getLanguageConverter($parser->getContentLanguage());
+		if ($lc->hasVariants()) {
+			$lc->findVariantLink($titleText, $title, true);
+		}
+	}
+
 	public function getMagicWord($id): MagicWord
 	{
 		return MediaWikiServices::getInstance()->getMagicWordFactory()->get($id);
@@ -17,7 +30,15 @@ class VersionHelper35 extends VersionHelper
 		return $parser->getStripState();
 	}
 
-	public function replaceLinkHoldersText(Parser $parser, string $output): string
+	public function handleInternalLinks(Parser $parser, string $text): string
+	{
+		$reflector = new ReflectionObject($parser);
+		$replaceLinks = $reflector->getMethod('handleInternalLinks');
+		$replaceLinks->setAccessible(true);
+		return $replaceLinks->invoke($parser, $text);
+	}
+
+	public function replaceLinkHoldersText(Parser $parser, string $text): string
 	{
 		// Make $parser->replaceLinkHoldersText() available via reflection. This is blatantly "a bad thing", but as of
 		// MW 1.35, it's the only way to implement the functionality which was previously public. Failing this, it's
@@ -27,6 +48,21 @@ class VersionHelper35 extends VersionHelper
 		$reflector = new ReflectionObject($parser);
 		$replaceLinks = $reflector->getMethod('replaceLinkHoldersText');
 		$replaceLinks->setAccessible(true);
-		return $replaceLinks->invoke($parser, $output);
+		return $replaceLinks->invoke($parser, $text);
+	}
+
+	public function specialPageExists(Title $title): bool
+	{
+		return MediaWikiServices::getInstance()->getSpecialPageFactory()->exists($title->getDBkey());
+	}
+
+	/**
+	 * @since 1.35
+	 * @param Language $language
+	 * @return ILanguageConverter
+	 */
+	private static function getLanguageConverter(Language $language): ILanguageConverter
+	{
+		return MediaWikiServices::getInstance()->getLanguageConverterFactory()->getLanguageConverter($language);
 	}
 }

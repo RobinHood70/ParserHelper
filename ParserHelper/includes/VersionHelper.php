@@ -41,6 +41,13 @@ abstract class VersionHelper
 		return self::$instance;
 	}
 
+	/**
+	 * Gets the MediaWiki version number as text. This is static rather than absttract so it can be used to determine
+	 * the version without relying on the version.
+	 *
+	 * @return string
+	 *
+	 */
 	public static function getMWVersion(): string
 	{
 		global $wgVersion;
@@ -50,12 +57,29 @@ abstract class VersionHelper
 
 	#region Public Abstract Functions
 	/**
+	 * Determines if a File page exists on the local wiki.
+	 *
+	 * @param Title $title The file to search for.
+	 *
+	 * @return bool True if the file was found; otherwise, false.
+	 */
+	public abstract function fileExists(Title $title): bool;
+
+	/**
+	 * Finds a language-variant link, if appropriate. See https://www.mediawiki.org/wiki/LangConv.
+	 *
+	 * @param Parser $parser The parser in use.
+	 * @param string $titleText The title to search for. (May be modified on exit.)
+	 * @param Title $title The resultant title. (May be modified on exit.)
+	 */
+	public abstract function findVariantLink(Parser $parser, string &$titleText, Title &$title): void;
+
+	/**
 	 * Gets the magic word for the specified id.
 	 *
 	 * @param string $id The id of the magic word to get.
 	 *
 	 * @return MagicWord The magic word or null if not found.
-	 *
 	 */
 	public abstract function getMagicWord(string $id): MagicWord;
 
@@ -65,9 +89,18 @@ abstract class VersionHelper
 	 * @param Parser $parser The parser in use.
 	 *
 	 * @return StripState
-	 *
 	 */
 	public abstract function getStripState(Parser $parser): StripState;
+
+	/**
+	 * Converts internal links to <!--LINK #--> objects.
+	 *
+	 * @param Parser $parser The parser in use.
+	 * @param string $text The text to convert.
+	 *
+	 * @return string
+	 */
+	public abstract function handleInternalLinks(Parser $parser, string $text): string;
 
 	/**
 	 * Calls $parser->replaceLinkHoldersText(), bypassing the private access modifier if needed.
@@ -76,7 +109,16 @@ abstract class VersionHelper
 	 * @param mixed $output The output text to replace in.
 	 *
 	 * @return string
-	 *
 	 */
-	public abstract function replaceLinkHoldersText(Parser $parser, string $output): string;
+	public abstract function replaceLinkHoldersText(Parser $parser, string $text): string;
+
+	/**
+	 * Determines if a Special page exists on the local wiki.
+	 *
+	 * @param Title $title The Special page to search for.
+	 *
+	 * @return bool True if the page was found; otherwise, false.
+	 */
+	public abstract function specialPageExists(Title $title): bool;
+	#endregion
 }
