@@ -60,6 +60,11 @@ class RHDebug
 		return $db->lastQuery() . "\n\n" . $retval;
 	}
 
+	public static function getStackTrace()
+	{
+		return (new Exception())->getTraceAsString();
+	}
+
 	/**
 	 * Logs text to the file provided in the PH_LOG_FILE define, along with the class and function it's executing from.
 	 *
@@ -81,32 +86,6 @@ class RHDebug
 		}
 
 		RHDebug::writeFile($method, ': ', $text);
-	}
-
-	public static function logTrace(int $limit = 0): string
-	{
-		if (!RHDebug::isDev()) {
-			return '';
-		}
-
-		$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $limit == 0 ? 0 : $limit + 1);
-		if (count($trace) > 0) {
-			unset($trace[0]);
-		}
-
-		$lines = [];
-		foreach ($trace as $index => $line) {
-			$lines[] =
-				str_pad($line['class'], 20, ' ', STR_PAD_LEFT) .
-				$line['type'] .
-				str_pad($line['function'], 25) .
-				' on line ' .
-				str_pad($line['line'], 4, ' ', STR_PAD_LEFT) .
-				' of file ' .
-				$line['file'];
-		}
-
-		return implode("\n", $lines);
 	}
 
 	/**
