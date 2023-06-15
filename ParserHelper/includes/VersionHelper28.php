@@ -11,7 +11,7 @@ class VersionHelper28 extends VersionHelper
 		return (bool)$file && $file->exists();
 	}
 
-	public function findVariantLink(Parser $parser, string &$titleText, Title &$title): void
+	public function findVariantLink(Parser $parser, string &$titleText, ?Title &$title): void
 	{
 		$language = $parser->getFunctionLang();
 		if ($language->hasVariants()) {
