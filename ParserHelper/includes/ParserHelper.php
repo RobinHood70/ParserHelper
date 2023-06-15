@@ -197,14 +197,18 @@ class ParserHelper
 	/**
 	 * Parse separator string for C-like character entities and surrounding quotes.
 	 *
-	 * @param array $magicArgs The magic-word arguments as created by getMagicArgs().
+	 * @param array $separator The separator to evaluate. For backwards compatibility, can also be the magic-word
+	 * arguments as created by getMagicArgs().
 	 *
 	 * @return string The parsed string.
 	 *
 	 */
-	public static function getSeparator(array $magicArgs): string
+	public static function getSeparator($separator): string
 	{
-		$separator = $magicArgs[self::NA_SEPARATOR] ?? '';
+		if (is_array($separator)) {
+			$separator = $separator[self::NA_SEPARATOR] ?? '';
+		}
+
 		if (strlen($separator) > 1) {
 			$separator = stripcslashes($separator);
 			$first = $separator[0];
