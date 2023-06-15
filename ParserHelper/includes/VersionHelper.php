@@ -1,7 +1,5 @@
 <?php
 
-use Elastica\QueryBuilder\Version;
-
 /**
  * Provides version-specific methods for those calls that differ substantially across versions.
  */
@@ -103,6 +101,14 @@ abstract class VersionHelper
 	public abstract function handleInternalLinks(Parser $parser, string $text): string;
 
 	/**
+	 * Launches any recursive updates needed for the title passed to it.
+	 *
+	 * @param Title $title The title that was edited.
+	 * @param Parser $parser The parser in use.
+	 */
+	public abstract function onArticleEdit(Title $title, Parser $parser): void;
+
+	/**
 	 * Calls $parser->replaceLinkHoldersText(), bypassing the private access modifier if needed.
 	 *
 	 * @param Parser $parser The parser in use.
@@ -113,6 +119,13 @@ abstract class VersionHelper
 	public abstract function replaceLinkHoldersText(Parser $parser, string $text): string;
 
 	/**
+	 * Sets the Parser's mPreprocessor variable.
+	 *
+	 * @param Parser $parser The parser in use.
+	 */
+	public abstract function setPreprocessor(Parser $parser, $preprocessor): void;
+
+	/**
 	 * Determines if a Special page exists on the local wiki.
 	 *
 	 * @param Title $title The Special page to search for.
@@ -120,5 +133,16 @@ abstract class VersionHelper
 	 * @return bool True if the page was found; otherwise, false.
 	 */
 	public abstract function specialPageExists(Title $title): bool;
+
+	/**
+	 * Updates the backlinks for a specific page and specific type of backlink (based on table name).
+	 *
+	 * @param Title $title The title whose backlinks should be updated.
+	 * @param string $tableName The table name of the links to update.
+	 *
+	 * @return void
+	 *
+	 */
+	public abstract function updateBackLinks(Title $title, string $tableName): void;
 	#endregion
 }

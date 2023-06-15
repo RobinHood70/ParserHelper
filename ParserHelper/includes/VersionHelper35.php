@@ -38,6 +38,11 @@ class VersionHelper35 extends VersionHelper
 		return $replaceLinks->invoke($parser, $text);
 	}
 
+	public function onArticleEdit(Title $title, Parser $parser): void
+	{
+		WikiPage::onArticleEdit($title, $parser->getRevisionRecordObject());
+	}
+
 	public function replaceLinkHoldersText(Parser $parser, string $text): string
 	{
 		// Make $parser->replaceLinkHoldersText() available via reflection. This is blatantly "a bad thing", but as of
@@ -51,9 +56,26 @@ class VersionHelper35 extends VersionHelper
 		return $replaceLinks->invoke($parser, $text);
 	}
 
+	public function setPreprocessor(Parser $parser, $preprocessor): void
+	{
+		$reflectionClass = new ReflectionClass('Parser');
+		$reflectionProp = $reflectionClass->getProperty('mPreprocessor');
+		$reflectionProp->setAccessible(true);
+		$reflectionProp->setValue($parser, $preprocessor);
+	}
+
 	public function specialPageExists(Title $title): bool
 	{
 		return MediaWikiServices::getInstance()->getSpecialPageFactory()->exists($title->getDBkey());
+	}
+
+	public function updateBackLinks(Title $title, string $tableName): void
+	{
+		$jobs[] = HTMLCacheUpdateJob::newForBacklinks(
+			$title,
+			$tableName,
+			['causeAction' => 'page-edit']
+		);
 	}
 
 	/**

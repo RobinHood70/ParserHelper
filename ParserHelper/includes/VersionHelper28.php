@@ -34,13 +34,30 @@ class VersionHelper28 extends VersionHelper
 		return $parser->replaceInternalLinks($text);
 	}
 
+	public function onArticleEdit(Title $title, Parser $parser): void
+	{
+		WikiPage::onArticleEdit($title, $parser->getRevisionObject());
+	}
+
 	public function replaceLinkHoldersText(Parser $parser, string $text): string
 	{
 		return $parser->replaceLinkHoldersText($text);
 	}
 
+	public function setPreprocessor(Parser $parser, $preprocessor): void
+	{
+		$propName = 'mPreprocessorClass'; // Call by name to avoid error from property not being defined in Parser.
+		$parser->$propName = get_class($preprocessor);
+		$parser->mPreprocessor = $preprocessor;
+	}
+
 	public function specialPageExists(Title $title): bool
 	{
 		return SpecialPageFactory::exists($title->getDBkey());
+	}
+
+	public function updateBackLinks(Title $title, string $tableName): void
+	{
+		LinksUpdate::queueRecursiveJobsForTable($title, $tableName);
 	}
 }
