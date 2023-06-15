@@ -193,7 +193,7 @@ class ParserHelper
 	}
 
 	/**
-	 * Parse separator string for C-like character entities and surrounding quotes.
+	 * Get separator from $magicArgs, if it exists, then parse it using parseSeparator().
 	 *
 	 * @param array $separator The separator to evaluate. For backwards compatibility, can also be the magic-word
 	 * arguments as created by getMagicArgs().
@@ -201,21 +201,11 @@ class ParserHelper
 	 * @return string The parsed string.
 	 *
 	 */
-	public static function getSeparator($separator): string
+	public static function getSeparator(array $magicArgs): string
 	{
-		if (is_array($separator)) {
-			$separator = $separator[self::NA_SEPARATOR] ?? '';
-		}
-
-		if (strlen($separator) > 1) {
-			$separator = stripcslashes($separator);
-			$first = $separator[0];
-			if (in_array($first, ['\'', '`', '"']) && $first === substr($separator, -1, 1)) {
-				return substr($separator, 1, -1);
-			}
-		}
-
-		return $separator;
+		return isset($magicArgs[self::NA_SEPARATOR])
+			? self::parseSeparator($magicArgs[self::NA_SEPARATOR])
+			: '';
 	}
 
 	/**
@@ -235,6 +225,28 @@ class ParserHelper
 		return
 			!is_null($arrayValue) &&
 			VersionHelper::getInstance()->getMagicWord($value)->matchStartToEnd($arrayValue);
+	}
+
+	/**
+	 * Parse separator string for C-like character entities and surrounding quotes.
+	 *
+	 * @param string $separator The separator to evaluate. For backwards compatibility, can also be the magic-word
+	 * arguments as created by getMagicArgs().
+	 *
+	 * @return string The parsed string.
+	 *
+	 */
+	public static function parseSeparator(string $separator): string
+	{
+		if (strlen($separator) > 1) {
+			$separator = stripcslashes($separator);
+			$first = $separator[0];
+			if (in_array($first, ['\'', '`', '"']) && $first === substr($separator, -1, 1)) {
+				return substr($separator, 1, -1);
+			}
+		}
+
+		return $separator;
 	}
 
 	/**
