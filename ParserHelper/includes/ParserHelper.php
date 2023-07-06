@@ -95,7 +95,7 @@ class ParserHelper
 			$out .= "<th style='background:transparent; border:0px none; margin:0px; text-align:center'>$header</th>";
 		}
 
-		$out .= '<tr><td style="background:transparent; border:0px none; margin:0px;"><pre style="margin-top:0">' . htmlspecialchars($output) . '</pre></td></tr></table>';
+		$out .= '<tr><td style="background:transparent; border:0px none; margin:0px;"><pre>' . htmlspecialchars($output) . '</pre></td></tr></table>';
 		return [$out, 'noparse' => false];
 	}
 
