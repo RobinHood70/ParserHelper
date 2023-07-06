@@ -19,6 +19,12 @@ class VersionHelper28 extends VersionHelper
 		}
 	}
 
+	public function getContentLanguage(): Language
+	{
+		global $wgContLang;
+		return $wgContLang;
+	}
+
 	public function getMagicWord(string $id): MagicWord
 	{
 		return MagicWord::get($id);
@@ -34,9 +40,16 @@ class VersionHelper28 extends VersionHelper
 		return $parser->replaceInternalLinks($text);
 	}
 
-	public function onArticleEdit(Title $title, Parser $parser): void
+	/** @param ?Revision $revision */
+	public function onArticleEdit(Title $title, $revId): void
 	{
-		WikiPage::onArticleEdit($title, $parser->getRevisionObject());
+		if ($revId instanceof Parser) {
+			$revision = $revId->getRevisionObject();
+		} else {
+			$revision = Revision::newFromId($revId);
+		}
+
+		WikiPage::onArticleEdit($title, $revision);
 	}
 
 	public function replaceLinkHoldersText(Parser $parser, string $text): string

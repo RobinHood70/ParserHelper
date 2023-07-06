@@ -73,6 +73,13 @@ abstract class VersionHelper
 	public abstract function findVariantLink(Parser $parser, string &$titleText, Title &$title): void;
 
 	/**
+	 * Gets the wiki's content language.
+	 *
+	 * @return Language
+	 */
+	public abstract function getContentLanguage(): Language;
+
+	/**
 	 * Gets the magic word for the specified id.
 	 *
 	 * @param string $id The id of the magic word to get.
@@ -104,9 +111,9 @@ abstract class VersionHelper
 	 * Launches any recursive updates needed for the title passed to it.
 	 *
 	 * @param Title $title The title that was edited.
-	 * @param Parser $parser The parser in use.
+	 * @param mixed $revision The current revision. Can also be a Parser object for backwards compatibility.
 	 */
-	public abstract function onArticleEdit(Title $title, Parser $parser): void;
+	public abstract function onArticleEdit(Title $title, $revId): void;
 
 	/**
 	 * Calls $parser->replaceLinkHoldersText(), bypassing the private access modifier if needed.

@@ -20,6 +20,11 @@ class VersionHelper35 extends VersionHelper
 		}
 	}
 
+	public function getContentLanguage(): Language
+	{
+		return MediaWikiServices::getInstance()->getContentLanguage();
+	}
+
 	public function getMagicWord($id): MagicWord
 	{
 		return MediaWikiServices::getInstance()->getMagicWordFactory()->get($id);
@@ -38,9 +43,15 @@ class VersionHelper35 extends VersionHelper
 		return $replaceLinks->invoke($parser, $text);
 	}
 
-	public function onArticleEdit(Title $title, Parser $parser): void
+	public function onArticleEdit(Title $title, $revId): void
 	{
-		WikiPage::onArticleEdit($title, $parser->getRevisionRecordObject());
+		if ($revId instanceof Parser) {
+			$revision = $revId->getRevisionRecordObject();
+		} else {
+			$revision = MediaWikiServices::getInstance()->getRevisionStore()->getRevisionById($revId);
+		}
+
+		WikiPage::onArticleEdit($title, $revision);
 	}
 
 	public function replaceLinkHoldersText(Parser $parser, string $text): string
