@@ -6,6 +6,8 @@ use Wikimedia\Rdbms\ResultWrapper;
 
 class RHDebug
 {
+	private static $writeFilePath;
+
 	/**
 	 * Tries to send a popup message via Javascript.
 	 *
@@ -149,11 +151,20 @@ class RHDebug
 			return;
 		}
 
-		$server = $_SERVER['SERVER_NAME'] ?? null;
-		$file = $server === 'rob-centos'
-			? 'RHLog.txt'
-			: '/home/robinhood/RHLog.txt';
-		$handle = fopen($file, 'a') or die("Cannot open file: $file");
+		if (!isset(self::$writeFilePath)) {
+			$server = $_SERVER['SERVER_NAME'] ?? gethostname() ?? null;
+			$ip = getenv('MW_INSTALL_PATH') ?: realpath(__DIR__ . '/../../..');
+			if (substr($ip, -11) === '/extensions') {
+				$ip = substr($ip, 0, strlen($ip) - 11);
+			}
+
+			self::$writeFilePath = $server === 'rob-centos'
+				? "$ip/RHLog.txt"
+				: '/home/robinhood/RHLog.txt';
+		}
+
+		$file = self::$writeFilePath;
+		$handle = fopen($file, 'a') or die("Cannot open file: {$file}");
 
 		[$msec, $sec] = explode(' ', microtime());
 		$msec = str_pad(round($msec, 2), 4, '0');
@@ -206,7 +217,7 @@ class RHDebug
 			return true;
 		}
 
-		$server = $_SERVER['SERVER_NAME'] ?? null;
+		$server = $_SERVER['SERVER_NAME'] ?? gethostname() ?? null;
 		return in_array($server, ['content3.uesp.net', 'dev.uesp.net', 'rob-centos']);
 	}
 }
