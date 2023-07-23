@@ -1,5 +1,7 @@
 <?php
 
+use MediaWiki\MediaWikiServices;
+
 /**
  * See base class for documentation.
  */
@@ -67,9 +69,10 @@ class VersionHelper28 extends VersionHelper
 
 		// Even though we will in many cases have just parsed the output, there's no reliable way to get it from there
 		// to here, so we ask for it again. The parser cache should make this relatively fast.
+		$title = $page->getTitle();
 		$popts = $page->makeParserOptions('canonical');
 		$enableParserCache = MediaWikiServices::getInstance()->getMainConfig()->get('EnableParserCache');
-		$parserOutput = $content->getParserOutput($title, $latest, $popts, $enableParserCache);
+		$parserOutput = $content->getParserOutput($title, $page->getLatest(), $popts, $enableParserCache);
 		$updates = $content->getSecondaryDataUpdates($title, null, $recursive, $parserOutput);
 		foreach ($updates as $update) {
 			DeferredUpdates::addUpdate($update, DeferredUpdates::PRESEND);
