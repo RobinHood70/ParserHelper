@@ -80,6 +80,15 @@ abstract class VersionHelper
 	public abstract function getContentLanguage(): Language;
 
 	/**
+	 * Gets the latest revision of a page as the appropriate revision type for the version.
+	 *
+	 * @param WikiPage $page The page to get the revision of.
+	 *
+	 * @return Revision|RevisionRecord
+	 */
+	public abstract function getLatestRevision(WikiPage $page);
+
+	/**
 	 * Gets the magic word for the specified id.
 	 *
 	 * @param string $id The id of the magic word to get.
@@ -114,6 +123,13 @@ abstract class VersionHelper
 	 * @param mixed $revision The current revision. Can also be a Parser object for backwards compatibility.
 	 */
 	public abstract function onArticleEdit(Title $title, $revId): void;
+
+	/**
+	 * Recursively updates a page.
+	 *
+	 * @param WikiPage $page The page to purge. This is always a link-update purge, optionally recursive.
+	 */
+	public abstract function purge($page, bool $recursive);
 
 	/**
 	 * Calls $parser->replaceLinkHoldersText(), bypassing the private access modifier if needed.

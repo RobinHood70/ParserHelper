@@ -25,6 +25,11 @@ class VersionHelper35 extends VersionHelper
 		return MediaWikiServices::getInstance()->getContentLanguage();
 	}
 
+	public function getLatestRevision(WikiPage $page)
+	{
+		return $page->getRevisionRecord();
+	}
+
 	public function getMagicWord($id): MagicWord
 	{
 		return MediaWikiServices::getInstance()->getMagicWordFactory()->get($id);
@@ -52,6 +57,20 @@ class VersionHelper35 extends VersionHelper
 		}
 
 		WikiPage::onArticleEdit($title, $revision);
+	}
+
+	public function purge($page, bool $recursive): void
+	{
+		$page->doPurge();
+		$factory = MediaWikiServices::getInstance()->getWikiPageFactory();
+		$page = $factory->newFromTitle($page);
+		$page->doPurge();
+		$page->updateParserCache(['causeAction' => 'api-purge']);
+		$page->doSecondaryDataUpdates([
+			'recursive' => $recursive,
+			'causeAction' => 'api-purge',
+			'defer' => DeferredUpdates::PRESEND,
+		]);
 	}
 
 	public function replaceLinkHoldersText(Parser $parser, string $text): string

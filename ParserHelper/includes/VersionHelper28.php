@@ -25,6 +25,11 @@ class VersionHelper28 extends VersionHelper
 		return $wgContLang;
 	}
 
+	public function getLatestRevision(WikiPage $page)
+	{
+		return $page->getRevision();
+	}
+
 	public function getMagicWord(string $id): MagicWord
 	{
 		return MagicWord::get($id);
@@ -50,6 +55,29 @@ class VersionHelper28 extends VersionHelper
 		}
 
 		WikiPage::onArticleEdit($title, $revision);
+	}
+
+	/** @param ?Revision $revision */
+	public function purge($page, bool $recursive): void
+	{
+		$content = $page->getContent(Revision::RAW);
+		if (!$content) {
+			return;
+		}
+
+		// Even though we will in many cases have just parsed the output, there's no reliable way to get it from there
+		// to here, so we ask for it again. The parser cache should make this relatively fast.
+		$popts = $page->makeParserOptions('canonical');
+		$enableParserCache = MediaWikiServices::getInstance()->getMainConfig()->get('EnableParserCache');
+		$parserOutput = $content->getParserOutput($title, $latest, $popts, $enableParserCache);
+		$updates = $content->getSecondaryDataUpdates($title, null, $recursive, $parserOutput);
+		foreach ($updates as $update) {
+			DeferredUpdates::addUpdate($update, DeferredUpdates::PRESEND);
+		}
+
+		if ($enableParserCache) {
+			MediaWikiServices::getInstance()->getParserCache()->save($parserOutput, $page, $popts);
+		}
 	}
 
 	public function replaceLinkHoldersText(Parser $parser, string $text): string
