@@ -81,8 +81,7 @@ class ParserHelper
 	 * @param string $output The original text being output.
 	 * @param bool $debug Whether to return debug or regular text.
 	 *
-	 * @return string The modified text.
-	 *
+	 * @return array The modified text.
 	 */
 	public static function formatPFForDebug(string $output, bool $debug, bool $noparse = false, string $header = null): array
 	{
