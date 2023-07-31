@@ -5,6 +5,9 @@
  */
 abstract class VersionHelper
 {
+	// Copy of (Revision|RevisionRecord)::RAW
+	const RAW_CONTENT = 3;
+
 	#region Private Static Variables
 	/**
 	 * Instance variable for singleton.
@@ -54,6 +57,18 @@ abstract class VersionHelper
 	#endregion
 
 	#region Public Abstract Functions
+	/**
+	 * Recursively updates a page.
+	 *
+	 * @param WikiPage $page The page to purge. This is always a link-update purge, optionally recursive.
+	 * @param ParserOutput $parserOutput The parser output from a prior call to $page->getParserOutput().
+	 * @param ParserOptions $options The same parser options used with the above $parserOutput.
+	 *
+	 * @return void
+	 *
+	 */
+	public abstract function doSecondaryDataUpdates(WikiPage $page, ParserOutput $parserOutput, ParserOptions $options): void;
+
 	/**
 	 * Determines if a File page exists on the local wiki.
 	 *

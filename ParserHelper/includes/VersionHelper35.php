@@ -7,6 +7,16 @@ use MediaWiki\MediaWikiServices;
  */
 class VersionHelper35 extends VersionHelper
 {
+	public function doSecondaryDataUpdates(WikiPage $page, ParserOutput $parserOutput, ParserOptions $options): void
+	{
+		$page->updateParserCache(['causeAction' => 'vh-doSecondary']);
+		$page->doSecondaryDataUpdates([
+			'recursive' => true,
+			'causeAction' => 'vh-doSecondary',
+			'defer' => DeferredUpdates::PRESEND,
+		]);
+	}
+
 	public function fileExists(Title $title): bool
 	{
 		return MediaWikiServices::getInstance()->getRepoGroup()->findFile($title);

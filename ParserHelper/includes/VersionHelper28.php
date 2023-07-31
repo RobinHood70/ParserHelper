@@ -7,6 +7,25 @@ use MediaWiki\MediaWikiServices;
  */
 class VersionHelper28 extends VersionHelper
 {
+	/** @param ?Revision $revision */
+	public function doSecondaryDataUpdates(WikiPage $page, ParserOutput $parserOutput, ParserOptions $options): void
+	{
+		$title = $page->getTitle();
+		$content = $page->getContent();
+
+		// Even though we will in many cases have just parsed the output, there's no reliable way to get it from there
+		// to here, so we ask for it again. The parser cache should make this relatively fast.
+		$updates = $content->getSecondaryDataUpdates($title, null, true, $parserOutput);
+		foreach ($updates as $update) {
+			DeferredUpdates::addUpdate($update, DeferredUpdates::PRESEND);
+		}
+
+		try {
+			MediaWikiServices::getInstance()->getParserCache()->save($parserOutput, $page, $options);
+		} catch (Exception $e) {
+		}
+	}
+
 	public function fileExists(Title $title): bool
 	{
 		$file = RepoGroup::singleton()->getLocalRepo()->newFile($title);
