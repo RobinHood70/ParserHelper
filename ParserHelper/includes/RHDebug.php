@@ -153,13 +153,15 @@ class RHDebug
 
 		if (!isset(self::$writeFilePath)) {
 			$server = $_SERVER['SERVER_NAME'] ?? gethostname() ?? null;
-			$ip = getenv('MW_INSTALL_PATH') ?: realpath(__DIR__ . '/../../..');
-			if (substr($ip, -11) === '/extensions') {
-				$ip = substr($ip, 0, strlen($ip) - 11);
+			$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+			$dir = dirname($backtrace[count($backtrace) - 1]['file']);
+			$mdir = basename($dir);
+			if ($mdir === 'maintenance') {
+				$dir = dirname($dir);
 			}
 
 			self::$writeFilePath = $server === 'rob-centos'
-				? "$ip/RHLog.txt"
+				? "$dir/RHLog.txt"
 				: '/home/robinhood/RHLog.txt';
 		}
 
@@ -171,6 +173,7 @@ class RHDebug
 		fwrite($handle, '(' . date('Y-m-d H:i:s', $sec) . substr($msec, 1) . ') ');
 		foreach ($msgs as $msg) {
 			$msg2 = print_r($msg, true);
+			echo $msg2 . "\n";
 			fwrite($handle, $msg2);
 		}
 
