@@ -19,7 +19,7 @@ class VersionHelper35 extends VersionHelper
 
 	public function fileExists(Title $title): bool
 	{
-		return MediaWikiServices::getInstance()->getRepoGroup()->findFile($title);
+		return (bool)MediaWikiServices::getInstance()->getRepoGroup()->findFile($title);
 	}
 
 	public function findVariantLink(Parser $parser, string &$titleText, ?Title &$title): void
