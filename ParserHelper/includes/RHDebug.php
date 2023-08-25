@@ -173,7 +173,6 @@ class RHDebug
 		fwrite($handle, '(' . date('Y-m-d H:i:s', $sec) . substr($msec, 1) . ') ');
 		foreach ($msgs as $msg) {
 			$msg2 = print_r($msg, true);
-			echo $msg2 . "\n";
 			fwrite($handle, $msg2);
 		}
 
