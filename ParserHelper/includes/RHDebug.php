@@ -220,6 +220,12 @@ class RHDebug
 		}
 
 		$server = $_SERVER['SERVER_NAME'] ?? gethostname() ?? null;
-		return in_array($server, ['content3.uesp.net', 'dev.uesp.net', 'rob-centos']);
+		return in_array($server, [
+			'content3.starfieldwiki.net',
+			'content3.uesp.net',
+			'dev.starfieldwiki.net',
+			'dev.uesp.net',
+			'rob-centos'
+		]);
 	}
 }
