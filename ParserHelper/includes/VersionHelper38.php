@@ -5,7 +5,7 @@ use MediaWiki\MediaWikiServices;
 /**
  * See base class for documentation.
  */
-class VersionHelper35 extends VersionHelper
+class VersionHelper38 extends VersionHelper
 {
 	public function doSecondaryDataUpdates(WikiPage $page, ParserOutput $parserOutput, ParserOptions $options): void
 	{
@@ -47,7 +47,7 @@ class VersionHelper35 extends VersionHelper
 
 	public function getParserNamespace(Parser $parser): int
 	{
-		return $parser->getTitle()->getNamespace();
+		return $parser->getPage()->getNamespace();
 	}
 
 	public function getStripState(Parser $parser): StripState
@@ -103,7 +103,7 @@ class VersionHelper35 extends VersionHelper
 
 	public function setCategories(ParserOutput $output, array $c): void
 	{
-		$output->setCategoryLinks($c);
+		$output->setCategories($c);
 	}
 
 	public function setPreprocessor(Parser $parser, $preprocessor): void

@@ -56,6 +56,11 @@ class VersionHelper28 extends VersionHelper
 		return MagicWord::get($id);
 	}
 
+	public function getParserNamespace(Parser $parser): int
+	{
+		return $parser->getTitle()->getNamespace();
+	}
+
 	public function getStripState(Parser $parser): StripState
 	{
 		return $parser->mStripState;
@@ -105,6 +110,11 @@ class VersionHelper28 extends VersionHelper
 	public function replaceLinkHoldersText(Parser $parser, string $text): string
 	{
 		return $parser->replaceLinkHoldersText($text);
+	}
+
+	public function setCategories(ParserOutput $output, array $c): void
+	{
+		$output->setCategoryLinks($c);
 	}
 
 	public function setPreprocessor(Parser $parser, $preprocessor): void

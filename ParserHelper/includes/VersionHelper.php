@@ -5,6 +5,9 @@
  */
 abstract class VersionHelper
 {
+	// Copy of Parser::PTD_FOR_INCLUSION / Preprocessor::DOM_FOR_INCLUSION
+	const FOR_INCLUSION = 1;
+
 	// Copy of (Revision|RevisionRecord)::RAW
 	const RAW_CONTENT = 3;
 
@@ -28,7 +31,10 @@ abstract class VersionHelper
 	{
 		if (!self::$instance) {
 			$version = VersionHelper::getMWVersion();
-			if (version_compare($version, '1.35', '>=')) {
+			if (version_compare($version, '1.38', '>=')) {
+				require_once(__DIR__ . '/VersionHelper38.php');
+				self::$instance = new VersionHelper38();
+			} elseif (version_compare($version, '1.35', '>=')) {
 				require_once(__DIR__ . '/VersionHelper35.php');
 				self::$instance = new VersionHelper35();
 			} elseif (version_compare($version, '1.28', '>=')) {
@@ -113,6 +119,15 @@ abstract class VersionHelper
 	public abstract function getMagicWord(string $id): MagicWord;
 
 	/**
+	 * Gets the namespace ID from the parser.
+	 *
+	 * @param Parser $parser The object in use.
+	 *
+	 * @return int The namespace ID.
+	 */
+	public abstract function getParserNamespace(Parser $parser): int;
+
+	/**
 	 * Retrieves the parser's strip state object.
 	 *
 	 * @param Parser $parser The parser in use.
@@ -155,6 +170,13 @@ abstract class VersionHelper
 	 * @return string
 	 */
 	public abstract function replaceLinkHoldersText(Parser $parser, string $text): string;
+
+	/**
+	 * Overwrite the category map.
+	 * @param ParserOutput $output The ParserOutput object in use.
+	 * @param array<string,string> $c Map of category names to sort keys.
+	 */
+	public abstract function setCategories(ParserOutput $output, array $c): void;
 
 	/**
 	 * Sets the Parser's mPreprocessor variable.
