@@ -101,11 +101,6 @@ class VersionHelper35 extends VersionHelper
 		return $replaceLinks->invoke($parser, $text);
 	}
 
-	public function setCategories(ParserOutput $output, array $c): void
-	{
-		$output->setCategoryLinks($c);
-	}
-
 	public function setPreprocessor(Parser $parser, $preprocessor): void
 	{
 		$reflectionClass = new ReflectionClass('Parser');

@@ -172,13 +172,6 @@ abstract class VersionHelper
 	public abstract function replaceLinkHoldersText(Parser $parser, string $text): string;
 
 	/**
-	 * Overwrite the category map.
-	 * @param ParserOutput $output The ParserOutput object in use.
-	 * @param array<string,string> $c Map of category names to sort keys.
-	 */
-	public abstract function setCategories(ParserOutput $output, array $c): void;
-
-	/**
 	 * Sets the Parser's mPreprocessor variable.
 	 *
 	 * @param Parser $parser The parser in use.

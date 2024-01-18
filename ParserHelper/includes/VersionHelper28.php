@@ -112,11 +112,6 @@ class VersionHelper28 extends VersionHelper
 		return $parser->replaceLinkHoldersText($text);
 	}
 
-	public function setCategories(ParserOutput $output, array $c): void
-	{
-		$output->setCategoryLinks($c);
-	}
-
 	public function setPreprocessor(Parser $parser, $preprocessor): void
 	{
 		$propName = 'mPreprocessorClass'; // Call by name to avoid error from property not being defined in Parser.
