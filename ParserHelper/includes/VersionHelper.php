@@ -60,6 +60,38 @@ abstract class VersionHelper
 		global $wgVersion;
 		return defined('MW_VERSION') ? constant('MW_VERSION') : $wgVersion;
 	}
+
+	/**
+	 * Get the subject space for a given namespace.
+	 *
+	 * @param int $id The original namespace.
+	 *
+	 * @return int The subject namespace.
+	 *
+	 */
+	public static function getNsSubject(int $id)
+	{
+		// This is consistent across all versions of MediaWiki and is unlikely to change, so it's a regular function rather than an abstract one.
+		return $id < NS_MAIN
+			? $id
+			: $id & ~1;
+	}
+
+	/**
+	 * Get the talk space for a given namespace.
+	 *
+	 * @param int $id The original namespace.
+	 *
+	 * @return int The talk namespace.
+	 *
+	 */
+	public static function getNsTalk(int $id)
+	{
+		// This is consistent across all versions of MediaWiki and is unlikely to change, so it's a regular function rather than an abstract one.
+		return $id < NS_MAIN
+			? $id
+			: $id | 1;
+	}
 	#endregion
 
 	#region Public Abstract Functions
