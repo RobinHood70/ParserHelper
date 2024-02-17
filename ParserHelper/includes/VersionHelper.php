@@ -155,9 +155,10 @@ abstract class VersionHelper
 	public abstract function onArticleEdit(Title $title, $revId): void;
 
 	/**
-	 * Recursively updates a page.
+	 * Recursively updates a page. This is always a link-update purge, optionally recursive.
 	 *
-	 * @param WikiPage $page The page to purge. This is always a link-update purge, optionally recursive.
+	 * @param WikiPage $page The page to purge.
+	 * @param bool $recursive Whether the purge should be recursive.
 	 */
 	public abstract function purge($page, bool $recursive);
 

@@ -77,9 +77,6 @@ class VersionHelper35 extends VersionHelper
 	public function purge($page, bool $recursive): void
 	{
 		$page->doPurge();
-		$factory = MediaWikiServices::getInstance()->getWikiPageFactory();
-		$page = $factory->newFromTitle($page);
-		$page->doPurge();
 		$page->updateParserCache(['causeAction' => 'api-purge']);
 		$page->doSecondaryDataUpdates([
 			'recursive' => $recursive,

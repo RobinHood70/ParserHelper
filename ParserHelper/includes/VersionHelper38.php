@@ -1,6 +1,7 @@
 <?php
 
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Page\PageIdentity;
 
 /**
  * See base class for documentation.
@@ -74,11 +75,18 @@ class VersionHelper38 extends VersionHelper
 		WikiPage::onArticleEdit($title, $revision);
 	}
 
+	/**
+	 * [Description for purge]
+	 *
+	 * @param WikiPage $page
+	 * @param bool $recursive
+	 *
+	 * @return void
+	 *
+	 */
 	public function purge($page, bool $recursive): void
 	{
-		$page->doPurge();
-		$factory = MediaWikiServices::getInstance()->getWikiPageFactory();
-		$page = $factory->newFromTitle($page);
+		/** @var WikiPage $page */
 		$page->doPurge();
 		$page->updateParserCache(['causeAction' => 'api-purge']);
 		$page->doSecondaryDataUpdates([
