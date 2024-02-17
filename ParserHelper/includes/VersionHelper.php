@@ -105,7 +105,7 @@ abstract class VersionHelper
 	 *
 	 * @param WikiPage $page The page to get the revision of.
 	 *
-	 * @return Revision|RevisionRecord
+	 * @return Revision|RevisionRecord|null
 	 */
 	public abstract function getLatestRevision(WikiPage $page);
 
