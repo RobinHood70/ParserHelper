@@ -1,7 +1,7 @@
 <?php
 
 use MediaWiki\MediaWikiServices;
-use MediaWiki\Page\PageIdentity;
+use MediaWiki\Linker\LinkTarget;
 
 /**
  * See base class for documentation.
@@ -46,14 +46,19 @@ class VersionHelper38 extends VersionHelper
 		return MediaWikiServices::getInstance()->getMagicWordFactory()->get($id);
 	}
 
-	public function getParserNamespace(Parser $parser): int
-	{
-		return $parser->getPage()->getNamespace();
-	}
-
 	public function getStripState(Parser $parser): StripState
 	{
 		return $parser->getStripState();
+	}
+
+	public function getParserTitle(Parser $parser)
+	{
+		return $parser->getPage();
+	}
+
+	public function getWikiPage(LinkTarget $link): WikiPage
+	{
+		return MediaWikiServices::getInstance()->getWikiPageFactory()->newFromLinkTarget($link);
 	}
 
 	public function handleInternalLinks(Parser $parser, string $text): string

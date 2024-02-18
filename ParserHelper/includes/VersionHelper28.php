@@ -1,5 +1,6 @@
 <?php
 
+use MediaWiki\Linker\LinkTarget;
 use MediaWiki\MediaWikiServices;
 
 /**
@@ -56,14 +57,21 @@ class VersionHelper28 extends VersionHelper
 		return MagicWord::get($id);
 	}
 
-	public function getParserNamespace(Parser $parser): int
-	{
-		return $parser->getTitle()->getNamespace();
-	}
-
 	public function getStripState(Parser $parser): StripState
 	{
 		return $parser->mStripState;
+	}
+
+	public function getParserTitle(Parser $parser)
+	{
+		return $parser->getTitle();
+	}
+
+	public function getWikiPage(LinkTarget $link): WikiPage
+	{
+		return $link instanceof Title
+			? WikiPage::factory($link)
+			: WikiPage::factory(Title::newFromLinkTarget($link));
 	}
 
 	public function handleInternalLinks(Parser $parser, string $text): string

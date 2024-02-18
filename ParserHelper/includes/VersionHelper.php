@@ -1,5 +1,7 @@
 <?php
 
+use MediaWiki\Linker\LinkTarget;
+
 /**
  * Provides version-specific methods for those calls that differ substantially across versions.
  */
@@ -94,6 +96,23 @@ abstract class VersionHelper
 	}
 	#endregion
 
+	#region Public Functions
+	/**
+	 * Gets the namespace ID from the parser.
+	 *
+	 * @param Parser $parser The parser in use.
+	 *
+	 * @return ?int The namespace ID.
+	 */
+	public function getParserNamespace(Parser $parser)
+	{
+		$title = $this->getParserTitle($parser);
+		return $title
+			? $title->getNamespace()
+			: null;
+	}
+	#endregion
+
 	#region Public Abstract Functions
 	/**
 	 * Recursively updates a page.
@@ -151,15 +170,6 @@ abstract class VersionHelper
 	public abstract function getMagicWord(string $id): MagicWord;
 
 	/**
-	 * Gets the namespace ID from the parser.
-	 *
-	 * @param Parser $parser The object in use.
-	 *
-	 * @return int The namespace ID.
-	 */
-	public abstract function getParserNamespace(Parser $parser): int;
-
-	/**
 	 * Retrieves the parser's strip state object.
 	 *
 	 * @param Parser $parser The parser in use.
@@ -167,6 +177,26 @@ abstract class VersionHelper
 	 * @return StripState
 	 */
 	public abstract function getStripState(Parser $parser): StripState;
+
+	/**
+	 * Gets the parser's Title/PageReference object
+	 *
+	 * @param Parser $parser The parser in use.
+	 *
+	 * @return Title|PageReference|null
+	 *
+	 */
+	public abstract function getParserTitle(Parser $parser);
+
+	/**
+	 * Gets a WikiPage object from a Title.
+	 *
+	 * @param LinkTarget $link
+	 *
+	 * @return WikiPage
+	 *
+	 */
+	public abstract function getWikiPage(LinkTarget $link): WikiPage;
 
 	/**
 	 * Converts internal links to <!--LINK #--> objects.
