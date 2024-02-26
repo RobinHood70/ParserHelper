@@ -2,6 +2,8 @@
 
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Linker\LinkTarget;
+use MediaWiki\Revision\RevisionRecord;
+use MediaWiki\Revision\SlotRecord;
 
 /**
  * See base class for documentation.
@@ -46,14 +48,28 @@ class VersionHelper38 extends VersionHelper
 		return MediaWikiServices::getInstance()->getMagicWordFactory()->get($id);
 	}
 
-	public function getStripState(Parser $parser): StripState
+	public function getPageText(LinkTarget $target): ?string
 	{
-		return $parser->getStripState();
+		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromLinkTarget($target);
+		$rev = $page->getRevisionRecord();
+		if (!is_null($rev)) {
+			$content = $rev->getContent(SlotRecord::MAIN, RevisionRecord::RAW);
+			if ($content instanceof TextContent) {
+				return $content->getText();
+			}
+		}
+
+		return null;
 	}
 
 	public function getParserTitle(Parser $parser)
 	{
 		return $parser->getPage();
+	}
+
+	public function getStripState(Parser $parser): StripState
+	{
+		return $parser->getStripState();
 	}
 
 	public function getWikiPage(LinkTarget $link): WikiPage
@@ -112,6 +128,16 @@ class VersionHelper38 extends VersionHelper
 		$replaceLinks = $reflector->getMethod('replaceLinkHoldersText');
 		$replaceLinks->setAccessible(true);
 		return $replaceLinks->invoke($parser, $text);
+	}
+
+	public function saveContent(LinkTarget $target, Content $content, string $editSummary, User $user, int $flags = 0)
+	{
+		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromLinkTarget($target);
+		$updater = $page->newPageUpdater($user);
+		$updater->setContent(SlotRecord::MAIN, $content);
+		$updater->setFlags($flags);
+		$comment = CommentStoreComment::newUnsavedComment($editSummary);
+		$updater->saveRevision($comment, 0);
 	}
 
 	public function setPreprocessor(Parser $parser, $preprocessor): void

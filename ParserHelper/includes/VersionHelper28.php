@@ -57,14 +57,21 @@ class VersionHelper28 extends VersionHelper
 		return MagicWord::get($id);
 	}
 
-	public function getStripState(Parser $parser): StripState
+	public function getPageText(LinkTarget $target): ?string
 	{
-		return $parser->mStripState;
+		$title = $target instanceof Title ? $target : Title::newFromLinkTarget($target);
+		$page = WikiPage::factory($title);
+		return $page->getRevision()->getSerializedData();
 	}
 
 	public function getParserTitle(Parser $parser)
 	{
 		return $parser->getTitle();
+	}
+
+	public function getStripState(Parser $parser): StripState
+	{
+		return $parser->mStripState;
 	}
 
 	public function getWikiPage(LinkTarget $link): WikiPage
@@ -118,6 +125,19 @@ class VersionHelper28 extends VersionHelper
 	public function replaceLinkHoldersText(Parser $parser, string $text): string
 	{
 		return $parser->replaceLinkHoldersText($text);
+	}
+
+	public function saveContent(LinkTarget $target, Content $content, string $editSummary, User $user, int $flags = 0)
+	{
+		$title = $target instanceof Title ? $target : Title::newFromLinkTarget($target);
+		$page = WikiPage::factory($title);
+		$page->doEditContent(
+			$content,
+			$editSummary,
+			$flags,
+			false,
+			$user
+		);
 	}
 
 	public function setPreprocessor(Parser $parser, $preprocessor): void

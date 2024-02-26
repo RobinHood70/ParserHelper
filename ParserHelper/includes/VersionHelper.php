@@ -170,13 +170,14 @@ abstract class VersionHelper
 	public abstract function getMagicWord(string $id): MagicWord;
 
 	/**
-	 * Retrieves the parser's strip state object.
+	 * Gets the raw wikitext of a page.
 	 *
-	 * @param Parser $parser The parser in use.
+	 * @param LinkTarget $target The page to get.
 	 *
-	 * @return StripState
+	 * @return string|null The text of the page or null if not found.
+	 *
 	 */
-	public abstract function getStripState(Parser $parser): StripState;
+	public abstract function getPageText(LinkTarget $target): ?string;
 
 	/**
 	 * Gets the parser's Title/PageReference object
@@ -187,6 +188,15 @@ abstract class VersionHelper
 	 *
 	 */
 	public abstract function getParserTitle(Parser $parser);
+
+	/**
+	 * Retrieves the parser's strip state object.
+	 *
+	 * @param Parser $parser The parser in use.
+	 *
+	 * @return StripState
+	 */
+	public abstract function getStripState(Parser $parser): StripState;
 
 	/**
 	 * Gets a WikiPage object from a Title.
@@ -233,6 +243,20 @@ abstract class VersionHelper
 	 * @return string
 	 */
 	public abstract function replaceLinkHoldersText(Parser $parser, string $text): string;
+
+	/**
+	 * Saves a content object to the specified page.
+	 *
+	 * @param LinkTarget $pageName The location to save to.
+	 * @param Content $content The content to save.
+	 * @param string $editSummary The edit summary.
+	 * @param User $user The user to save as.
+	 * @param int $flags Flags that alter the save behaviour.
+	 *
+	 * @return [type]
+	 *
+	 */
+	public abstract function saveContent(LinkTarget $pageName, Content $content, string $editSummary, User $user, int $flags = 0);
 
 	/**
 	 * Sets the Parser's mPreprocessor variable.
