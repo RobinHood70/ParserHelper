@@ -63,6 +63,14 @@ class VersionHelper35 extends VersionHelper
 		return null;
 	}
 
+	public function getPageProperty(ParserOutput $output, string $name): ?string
+	{
+		$retval = $output->getProperty($name);
+		return $retval === false
+			? null
+			: $retval;
+	}
+
 	public function getParserTitle(Parser $parser)
 	{
 		return $parser->getTitle();
@@ -134,6 +142,11 @@ class VersionHelper35 extends VersionHelper
 		$updater->saveRevision($comment, 0);
 	}
 
+	public function setPageProperty(ParserOutput $output, string $name, $value): void
+	{
+		$output->setProperty($name, $value);
+	}
+
 	public function setPreprocessor(Parser $parser, $preprocessor): void
 	{
 		$reflectionClass = new ReflectionClass('Parser');
@@ -145,6 +158,11 @@ class VersionHelper35 extends VersionHelper
 	public function specialPageExists(Title $title): bool
 	{
 		return MediaWikiServices::getInstance()->getSpecialPageFactory()->exists($title->getDBkey());
+	}
+
+	public function unsetPageProperty(ParserOutput $output, string $name): void
+	{
+		$output->unsetProperty($name);
 	}
 
 	public function updateBackLinks(Title $title, string $tableName): void

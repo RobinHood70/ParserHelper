@@ -170,6 +170,17 @@ abstract class VersionHelper
 	public abstract function getMagicWord(string $id): MagicWord;
 
 	/**
+	 * Gets a page property from the parser's output.
+	 *
+	 * @param ParserOutput $output The parser's output (typically $parser->getOutput()).
+	 * @param string $name The name of the property to get.
+	 *
+	 * @return mixed
+	 *
+	 */
+	public abstract function getPageProperty(ParserOutput $output, string $name);
+
+	/**
 	 * Gets the raw wikitext of a page.
 	 *
 	 * @param LinkTarget $target The page to get.
@@ -259,6 +270,16 @@ abstract class VersionHelper
 	public abstract function saveContent(LinkTarget $pageName, Content $content, string $editSummary, User $user, int $flags = 0);
 
 	/**
+	 * Sets a page property in the parser's output.
+	 *
+	 * @param ParserOutput $output The parser's output (typically $parser->getOutput()).
+	 * @param string $name The name of the property to set.
+	 * @param mixed $value The value of the property.
+	 *
+	 */
+	public abstract function setPageProperty(ParserOutput $output, string $name, $value): void;
+
+	/**
 	 * Sets the Parser's mPreprocessor variable.
 	 *
 	 * @param Parser $parser The parser in use.
@@ -273,6 +294,15 @@ abstract class VersionHelper
 	 * @return bool True if the page was found; otherwise, false.
 	 */
 	public abstract function specialPageExists(Title $title): bool;
+
+	/**
+	 * Sets a page property in the parser's output.
+	 *
+	 * @param ParserOutput $output The parser's output (typically $parser->getOutput()).
+	 * @param string $name The name of the property to set.
+	 *
+	 */
+	public abstract function unsetPageProperty(ParserOutput $output, string $name): void;
 
 	/**
 	 * Updates the backlinks for a specific page and specific type of backlink (based on table name).

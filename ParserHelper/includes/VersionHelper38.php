@@ -48,6 +48,11 @@ class VersionHelper38 extends VersionHelper
 		return MediaWikiServices::getInstance()->getMagicWordFactory()->get($id);
 	}
 
+	public function getPageProperty(ParserOutput $output, string $name)
+	{
+		return $output->getPageProperty($name);
+	}
+
 	public function getPageText(LinkTarget $target): ?string
 	{
 		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromLinkTarget($target);
@@ -140,6 +145,11 @@ class VersionHelper38 extends VersionHelper
 		$updater->saveRevision($comment, 0);
 	}
 
+	public function setPageProperty(ParserOutput $output, string $name, $value): void
+	{
+		$output->setPageProperty($name, $value);
+	}
+
 	public function setPreprocessor(Parser $parser, $preprocessor): void
 	{
 		$reflectionClass = new ReflectionClass('Parser');
@@ -151,6 +161,11 @@ class VersionHelper38 extends VersionHelper
 	public function specialPageExists(Title $title): bool
 	{
 		return MediaWikiServices::getInstance()->getSpecialPageFactory()->exists($title->getDBkey());
+	}
+
+	public function unsetPageProperty(ParserOutput $output, string $name): void
+	{
+		$output->unsetPageProperty($name);
 	}
 
 	public function updateBackLinks(Title $title, string $tableName): void

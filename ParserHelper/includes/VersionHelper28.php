@@ -57,6 +57,14 @@ class VersionHelper28 extends VersionHelper
 		return MagicWord::get($id);
 	}
 
+	public function getPageProperty(ParserOutput $output, string $name): ?string
+	{
+		$retval = $output->getProperty($name);
+		return $retval === false
+			? null
+			: $retval;
+	}
+
 	public function getPageText(LinkTarget $target): ?string
 	{
 		$title = $target instanceof Title ? $target : Title::newFromLinkTarget($target);
@@ -140,6 +148,11 @@ class VersionHelper28 extends VersionHelper
 		);
 	}
 
+	public function setPageProperty(ParserOutput $output, string $name, $value): void
+	{
+		$output->setProperty($name, $value);
+	}
+
 	public function setPreprocessor(Parser $parser, $preprocessor): void
 	{
 		$propName = 'mPreprocessorClass'; // Call by name to avoid error from property not being defined in Parser.
@@ -150,6 +163,11 @@ class VersionHelper28 extends VersionHelper
 	public function specialPageExists(Title $title): bool
 	{
 		return SpecialPageFactory::exists($title->getDBkey());
+	}
+
+	public function unsetPageProperty(ParserOutput $output, string $name): void
+	{
+		$output->unsetProperty($name);
 	}
 
 	public function updateBackLinks(Title $title, string $tableName): void
