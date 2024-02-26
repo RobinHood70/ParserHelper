@@ -238,11 +238,12 @@ class ParserHelper
 	public static function parseSeparator(string $separator): string
 	{
 		if (strlen($separator) > 1) {
-			$separator = stripcslashes($separator);
 			$first = $separator[0];
 			if (in_array($first, ['\'', '`', '"']) && $first === substr($separator, -1, 1)) {
-				return substr($separator, 1, -1);
+				$separator = substr($separator, 1, -1);
 			}
+
+			$separator = stripcslashes($separator);
 		}
 
 		return $separator;
