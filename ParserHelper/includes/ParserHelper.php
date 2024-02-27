@@ -23,15 +23,20 @@ class ParserHelper
 	 * than magic word IDs.
 	 *
 	 * @param Parser $parser The parser in use.
-	 * @param PPFrame $frame The frame in use.
 	 * @param array $magicArgs The magic-word arguments as created by getMagicArgs().
+	 * @param array $magicArgsOld Temporary for backwards compatibility.
 	 *
 	 * @return bool
 	 *
 	 */
-	public static function checkDebugMagic(Parser $parser, PPFrame $frame, array $magicArgs): bool
+	public static function checkDebugMagic(Parser $parser, $magicArgs, $magicArgsOld = null): bool
 	{
-		$debug = $frame->expand($magicArgs[self::NA_DEBUG] ?? false);
+		// Convert old calls to new form. $magicArgs can be made an array instead of mixed once everything is updated.
+		if ($magicArgs instanceof PPFrame) {
+			$magicArgs = $magicArgsOld;
+		}
+
+		$debug = $magicArgs[self::NA_DEBUG] ?? false;
 		$matched = VersionHelper::getInstance()->getMagicWord(self::AV_ALWAYS)->matchStartToEnd($debug);
 		$preview = $parser->getOptions()->getIsPreview();
 		$retval = $preview
@@ -44,20 +49,21 @@ class ParserHelper
 	/**
 	 * Checks whether both the `if=` and `ifnot=` conditions have been satisfied.
 	 *
-	 * @param PPFrame $frame The frame in use.
 	 * @param array $magicArgs The magic-word arguments as created by getMagicArgs().
+	 * @param array $magicArgsOld Temporary for backwards compatibility.
 	 *
 	 * @return bool True if both conditions (if applicable) have been satisfied; otherwise, false.
 	 *
 	 */
-	public static function checkIfs(PPFrame $frame, array $magicArgs): bool
+	public static function checkIfs($magicArgs, $magicArgsOld = null): bool
 	{
-		return (isset($magicArgs[self::NA_IF])
-			? trim($frame->expand($magicArgs[self::NA_IF]))
-			: true) &&
-			!(isset($magicArgs[self::NA_IFNOT])
-				? trim($frame->expand($magicArgs[self::NA_IFNOT]))
-				: false);
+		// Convert old calls to new form. $magicArgs can be made an array instead of mixed once everything is updated.
+		if ($magicArgs instanceof PPFrame) {
+			$magicArgs = $magicArgsOld;
+		}
+
+		return ($magicArgs[self::NA_IF] ?? true) &&
+			!($magicArgs[self::NA_IFNOT] ?? false);
 	}
 
 	/**
