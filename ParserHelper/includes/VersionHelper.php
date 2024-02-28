@@ -141,8 +141,9 @@ abstract class VersionHelper
 	 * @param Parser $parser The parser in use.
 	 * @param string $titleText The title to search for. (May be modified on exit.)
 	 * @param Title $title The resultant title. (May be modified on exit.)
+	 * @param bool $ignoreOtherCond Disable other conditions when transcluding a template or updating a category link.
 	 */
-	public abstract function findVariantLink(Parser $parser, string &$titleText, Title &$title): void;
+	public abstract function findVariantLink(Parser $parser, string &$titleText, Title &$title, $ignoreOtherCond = false): void;
 
 	/**
 	 * Gets the wiki's content language.

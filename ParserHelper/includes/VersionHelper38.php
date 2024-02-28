@@ -25,11 +25,11 @@ class VersionHelper38 extends VersionHelper
 		return (bool)MediaWikiServices::getInstance()->getRepoGroup()->findFile($title);
 	}
 
-	public function findVariantLink(Parser $parser, string &$titleText, ?Title &$title): void
+	public function findVariantLink(Parser $parser, string &$titleText, ?Title &$title, $ignoreOtherCond = false): void
 	{
 		$lc = self::getLanguageConverter($parser->getContentLanguage());
 		if ($lc->hasVariants()) {
-			$lc->findVariantLink($titleText, $title, true);
+			$lc->findVariantLink($titleText, $title, $ignoreOtherCond);
 		}
 	}
 
