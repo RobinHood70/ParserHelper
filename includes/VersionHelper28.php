@@ -67,9 +67,17 @@ class VersionHelper28 extends VersionHelper
 
 	public function getPageText(LinkTarget $target): ?string
 	{
-		$title = $target instanceof Title ? $target : Title::newFromLinkTarget($target);
-		$page = WikiPage::factory($title);
-		return $page->getRevision()->getSerializedData();
+		try {
+			$title = $target instanceof Title ? $target : Title::newFromLinkTarget($target);
+			$page = WikiPage::factory($title);
+			$rev = $page->getRevision();
+			if (!is_null($rev)) {
+				return $rev->getSerializedData();
+			}
+		} catch (Exception $e) {
+		}
+
+		return null;
 	}
 
 	public function getParserTitle(Parser $parser)
