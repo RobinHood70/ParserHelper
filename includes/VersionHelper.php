@@ -158,6 +158,7 @@ abstract class VersionHelper
 	 * @param WikiPage $page The page to get the revision of.
 	 *
 	 * @return Revision|RevisionRecord|null
+	 * @deprecated No longer used by internal code.
 	 */
 	public abstract function getLatestRevision(WikiPage $page);
 
@@ -177,6 +178,7 @@ abstract class VersionHelper
 	 * @param string $name The name of the property to get.
 	 *
 	 * @return mixed
+	 * @deprecated No longer used by internal code.
 	 *
 	 */
 	public abstract function getPageProperty(ParserOutput $output, string $name);
@@ -235,6 +237,7 @@ abstract class VersionHelper
 	 *
 	 * @param Title $title The title that was edited.
 	 * @param mixed $revision The current revision. Can also be a Parser object for backwards compatibility.
+	 * @deprecated No longer used by internal code.
 	 */
 	public abstract function onArticleEdit(Title $title, $revId): void;
 
