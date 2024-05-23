@@ -217,10 +217,10 @@ abstract class VersionHelper
 	 *
 	 * @param LinkTarget $link
 	 *
-	 * @return WikiPage
+	 * @return ?WikiPage A WikiPage object, or null if anything fails.
 	 *
 	 */
-	public abstract function getWikiPage(LinkTarget $link): WikiPage;
+	public abstract function getWikiPage(LinkTarget $link): ?WikiPage;
 
 	/**
 	 * Converts internal links to <!--LINK #--> objects.
@@ -268,10 +268,8 @@ abstract class VersionHelper
 	 * @param User $user The user to save as.
 	 * @param int $flags Flags that alter the save behaviour.
 	 *
-	 * @return [type]
-	 *
 	 */
-	public abstract function saveContent(LinkTarget $pageName, Content $content, string $editSummary, User $user, int $flags = 0);
+	public abstract function saveContent(LinkTarget $pageName, Content $content, string $editSummary, User $user, int $flags = 0): void;
 
 	/**
 	 * Sets a page property in the parser's output.

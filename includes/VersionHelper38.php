@@ -55,12 +55,14 @@ class VersionHelper38 extends VersionHelper
 
 	public function getPageText(LinkTarget $target): ?string
 	{
-		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromLinkTarget($target);
-		$rev = $page->getRevisionRecord();
-		if (!is_null($rev)) {
-			$content = $rev->getContent(SlotRecord::MAIN, RevisionRecord::RAW);
-			if ($content instanceof TextContent) {
-				return $content->getText();
+		$page = $this->getWikiPage($target);
+		if ($page) {
+			$rev = $page->getRevisionRecord();
+			if ($rev) {
+				$content = $rev->getContent(SlotRecord::MAIN, RevisionRecord::RAW);
+				if ($content instanceof TextContent) {
+					return $content->getText();
+				}
 			}
 		}
 
@@ -77,9 +79,14 @@ class VersionHelper38 extends VersionHelper
 		return $parser->getStripState();
 	}
 
-	public function getWikiPage(LinkTarget $link): WikiPage
+	public function getWikiPage(LinkTarget $link): ?WikiPage
 	{
-		return MediaWikiServices::getInstance()->getWikiPageFactory()->newFromLinkTarget($link);
+		try {
+			return MediaWikiServices::getInstance()->getWikiPageFactory()->newFromLinkTarget($link);
+		} catch (Exception $e) {
+		}
+
+		return null;
 	}
 
 	public function handleInternalLinks(Parser $parser, string $text): string
@@ -135,14 +142,16 @@ class VersionHelper38 extends VersionHelper
 		return $replaceLinks->invoke($parser, $text);
 	}
 
-	public function saveContent(LinkTarget $target, Content $content, string $editSummary, User $user, int $flags = 0)
+	public function saveContent(LinkTarget $target, Content $content, string $editSummary, User $user, int $flags = 0): void
 	{
-		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromLinkTarget($target);
-		$updater = $page->newPageUpdater($user);
-		$updater->setContent(SlotRecord::MAIN, $content);
-		$updater->setFlags($flags);
-		$comment = CommentStoreComment::newUnsavedComment($editSummary);
-		$updater->saveRevision($comment, 0);
+		$page = $this->getWikiPage($target);
+		if ($page) {
+			$updater = $page->newPageUpdater($user);
+			$updater->setContent(SlotRecord::MAIN, $content);
+			$updater->setFlags($flags);
+			$comment = CommentStoreComment::newUnsavedComment($editSummary);
+			$updater->saveRevision($comment, 0);
+		}
 	}
 
 	public function setPageProperty(ParserOutput $output, string $name, $value): void

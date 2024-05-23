@@ -67,14 +67,12 @@ class VersionHelper28 extends VersionHelper
 
 	public function getPageText(LinkTarget $target): ?string
 	{
-		try {
-			$title = $target instanceof Title ? $target : Title::newFromLinkTarget($target);
-			$page = WikiPage::factory($title);
+		$page = $this->getWikiPage($target);
+		if ($page) {
 			$rev = $page->getRevision();
-			if (!is_null($rev)) {
+			if ($rev) {
 				return $rev->getSerializedData();
 			}
-		} catch (Exception $e) {
 		}
 
 		return null;
@@ -90,11 +88,16 @@ class VersionHelper28 extends VersionHelper
 		return $parser->mStripState;
 	}
 
-	public function getWikiPage(LinkTarget $link): WikiPage
+	public function getWikiPage(LinkTarget $link): ?WikiPage
 	{
-		return $link instanceof Title
-			? WikiPage::factory($link)
-			: WikiPage::factory(Title::newFromLinkTarget($link));
+		try {
+			return $link instanceof Title
+				? WikiPage::factory($link)
+				: WikiPage::factory(Title::newFromLinkTarget($link));
+		} catch (Exception $e) {
+		}
+
+		return null;
 	}
 
 	public function handleInternalLinks(Parser $parser, string $text): string
@@ -143,17 +146,18 @@ class VersionHelper28 extends VersionHelper
 		return $parser->replaceLinkHoldersText($text);
 	}
 
-	public function saveContent(LinkTarget $target, Content $content, string $editSummary, User $user, int $flags = 0)
+	public function saveContent(LinkTarget $target, Content $content, string $editSummary, User $user, int $flags = 0): void
 	{
-		$title = $target instanceof Title ? $target : Title::newFromLinkTarget($target);
-		$page = WikiPage::factory($title);
-		$page->doEditContent(
-			$content,
-			$editSummary,
-			$flags,
-			false,
-			$user
-		);
+		$page = $this->getWikiPage($target);
+		if ($page) {
+			$page->doEditContent(
+				$content,
+				$editSummary,
+				$flags,
+				false,
+				$user
+			);
+		}
 	}
 
 	public function setPageProperty(ParserOutput $output, string $name, $value): void
