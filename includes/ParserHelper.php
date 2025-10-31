@@ -138,7 +138,7 @@ class ParserHelper
 	 */
 	public static function getKeyValue(PPFrame $frame, $arg): array
 	{
-		if (($arg instanceof PPNode_Hash_Tree && $arg->name === 'part')) {
+		if ($arg instanceof PPNode_Hash_Tree && $arg->name === 'part') {
 			$split = $arg->splitArg();
 			$key = $split['index'] ? null : trim($frame->expand($split['name']));
 			$value = $split['value'];
