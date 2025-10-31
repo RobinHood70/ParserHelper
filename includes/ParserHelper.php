@@ -185,7 +185,7 @@ class ParserHelper
 			if (is_null($name)) {
 				$values[] = $value;
 			} else {
-				$magKey = $allowedArray->matchStartToEnd(trim($name));
+				$magKey = $allowedArray->matchStartToEnd($name);
 				if ($magKey && !isset($magic[$magKey])) {
 					$magic[$magKey] = trim($frame->expand($value));
 				} else {
