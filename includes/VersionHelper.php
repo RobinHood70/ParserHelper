@@ -59,8 +59,7 @@ abstract class VersionHelper
 	 */
 	public static function getMWVersion(): string
 	{
-		global $wgVersion;
-		return defined('MW_VERSION') ? constant('MW_VERSION') : $wgVersion;
+		return defined('MW_VERSION') ? MW_VERSION : $GLOBALS['wgVersion'] ?? '0.0.0';
 	}
 
 	/**
